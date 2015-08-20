@@ -30,7 +30,6 @@ class NestedIntervalsModelBase(ModelBase):
 
 
 class NestedIntervalsModelMixin(six.with_metaclass(NestedIntervalsModelBase, models.Model)):
-
     objects = models.Manager()
     nested_intervals = NestedIntervalsQuerySet.as_manager()
 
@@ -54,6 +53,13 @@ class NestedIntervalsModelMixin(six.with_metaclass(NestedIntervalsModelBase, mod
     def get_abs_matrix(self):
         return tuple(abs(num) for num in self.get_matrix())
 
+    def get_root(self):
+        # The root is the only node with
+        # no row value in the database.
+        return self.__class__(**{
+            field_name: abs(num)
+            for field_name, num in zip(self.nested_intervals_field_names, NESTED_INTERVALS_ROOT)})
+
     def set_as_child_of(self, parent):
         num_children = self.__class__.nested_intervals.children_of(parent).count()
         field_names = self.nested_intervals_field_names
@@ -68,7 +74,6 @@ class NestedIntervalsModelMixin(six.with_metaclass(NestedIntervalsModelBase, mod
 
     def save(self, *args, **kwargs):
         if not self.has_matrix():
-            for field_name, num in zip(self.nested_intervals_field_names, NESTED_INTERVALS_ROOT):
-                setattr(self, field_name, abs(num))
+            self.set_as_child_of(self.get_root())
 
         super(NestedIntervalsModelMixin, self).save(*args, **kwargs)
