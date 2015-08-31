@@ -27,3 +27,11 @@ def get_child_matrix(matrix, index):
     0 is the first index, 1 is the second index, etc.
     """
     return matrix * Matrix(index+1+1, -1, 1, 0)
+
+
+def get_parent_matrix(matrix):
+    return Matrix(
+        abs(matrix.a12),
+        -(abs(matrix.a12) - (matrix.a11 % abs(matrix.a12))),
+        abs(matrix.a22),
+        -(abs(matrix.a22) - (matrix.a21 % abs(matrix.a22))))
