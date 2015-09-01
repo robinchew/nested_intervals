@@ -28,8 +28,11 @@ class Matrix(object):
 
 def get_child_matrix(matrix, nth_child):
     """
-    0 is the first index, 1 is the second index, etc.
+    nth_child with value 1 repreesents the first child,
+    and 2 represents the second child, etc.
+    0 is an invalid nth_child value.
     """
+    assert nth_child >= 1
     return matrix * Matrix(nth_child+1, -1, 1, 0)
 
 
