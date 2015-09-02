@@ -1,3 +1,7 @@
+from decimal import Decimal
+import math
+
+
 class Matrix(object):
     def __init__(self, a11, a12, a21, a22):
         self.a11 = a11
@@ -21,12 +25,22 @@ class Matrix(object):
         for a in (self.a11, self.a12, self.a21, self.a22):
             yield a
 
-
 ROOT_MATRIX = Matrix(1, -1, 1, 0)
 
+def get_child_matrix(matrix, nth_child):
+    """
+    nth_child with value 1 repreesents the first child,
+    and 2 represents the second child, etc.
+    0 is an invalid nth_child value.
+    """
+    assert nth_child >= 1
+    return matrix * Matrix(nth_child+1, -1, 1, 0)
 
-def get_child_matrix(matrix, index):
-    """
-    0 is the first index, 1 is the second index, etc.
-    """
-    return matrix * Matrix(index+1+1, -1, 1, 0)
+
+def get_parent_matrix(matrix):
+    nth_child = math.floor(abs(Decimal(matrix.a11)) / abs(Decimal(matrix.a12)))
+    return Matrix(
+        matrix.a11 * 0 + matrix.a12 * (-1),
+        matrix.a11 * 1 + matrix.a12 * ((nth_child+1)),
+        matrix.a21 * 0 + matrix.a22 * (-1),
+        matrix.a21 * 1 + matrix.a22 * ((nth_child+1)))
