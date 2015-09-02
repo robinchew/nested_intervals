@@ -22,6 +22,9 @@ class Matrix(object):
             yield a
 
 
+ROOT_MATRIX = Matrix(1, -1, 1, 0)
+
+
 def get_child_matrix(matrix, index):
     """
     0 is the first index, 1 is the second index, etc.

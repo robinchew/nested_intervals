@@ -6,8 +6,6 @@ from django.utils import six
 from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQuerySet
 from nested_intervals.matrix import Matrix, get_child_matrix
 
-NESTED_INTERVALS_ROOT = Matrix(1, -1, 1, 0)
-
 
 class NestedIntervalsModelBase(ModelBase):
     def __new__(metaclass, class_name, bases, attrs):
@@ -29,10 +27,7 @@ class NestedIntervalsModelBase(ModelBase):
         return super(NestedIntervalsModelBase, metaclass).__new__(metaclass, class_name, bases, attrs)
 
 
-class NestedIntervalsModelMixin(six.with_metaclass(NestedIntervalsModelBase, models.Model)):
-    objects = models.Manager()
-    nested_intervals = NestedIntervalsQuerySet.as_manager()
-
+class NestedIntervalsModelMixin(models.Model):
     class Meta:
         abstract = True
 
@@ -58,7 +53,7 @@ class NestedIntervalsModelMixin(six.with_metaclass(NestedIntervalsModelBase, mod
         # no row value in the database.
         return self.__class__(**{
             field_name: abs(num)
-            for field_name, num in zip(self.nested_intervals_field_names, NESTED_INTERVALS_ROOT)})
+            for field_name, num in zip(self.nested_intervals_field_names, ROOT_MATRIX)})
 
     def set_as_child_of(self, parent):
         num_children = self.__class__.nested_intervals.children_of(parent).count()
