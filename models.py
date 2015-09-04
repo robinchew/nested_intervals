@@ -25,11 +25,13 @@ class NestedIntervalsModelMixin(models.Model):
         return tuple(abs(num) for num in self.get_matrix())
 
     def get_root(self):
-        # The root is the only node with
-        # no row value in the database.
-        return self.__class__(**{
+        return self.__class__.objects.get(**{
             field_name: abs(num)
             for field_name, num in zip(self._nested_intervals_field_names, ROOT_MATRIX)})
+
+    def set_as_root(self):
+        for field_name, num in zip(self._nested_intervals_field_names, ROOT_MATRIX)})
+            setattr(self, field_name, num)
 
     def set_as_child_of(self, parent):
         num_children = children_of(self.__class__.objects, parent).count()
@@ -45,6 +47,6 @@ class NestedIntervalsModelMixin(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.has_matrix():
-            self.set_as_child_of(self.get_root())
+            self.set_as_root()
 
         super(NestedIntervalsModelMixin, self).save(*args, **kwargs)
