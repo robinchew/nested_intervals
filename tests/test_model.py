@@ -34,28 +34,34 @@ class TestModel(TestCase):
 
         self.assertEqual(model.lnumerator, 1)
         self.assertEqual(model.ldenominator, 1)
-        self.assertEqual(model.rnumerator, 2)
-        self.assertEqual(model.rdenominator, 1)
+        self.assertEqual(model.rnumerator, 1)
+        self.assertEqual(model.rdenominator, 0)
 
         model = ExampleModel()
         model.save()
 
         model1, model2 = ExampleModel.objects.order_by('pk')
 
-        self.assertEqual(model2.lnumerator, 2)
+        self.assertEqual(model2.lnumerator, 1)
         self.assertEqual(model2.ldenominator, 1)
-        self.assertEqual(model2.rnumerator, 3)
-        self.assertEqual(model2.rdenominator, 1)
+        self.assertEqual(model2.rnumerator, 1)
+        self.assertEqual(model2.rdenominator, 0)
 
     def test_save_children(self):
         root = ExampleModel()
         root.save()
 
-        root = ExampleModel.objects.get(pk=root.pk)
-        self.assertEqual(root.get_abs_matrix(), (1, 1, 2, 1))
+        root = ExampleModel.objects.all().get()
+        self.assertEqual(root.get_abs_matrix(), (1, 1, 1, 0))
 
         child1 = ExampleModel()
         child1.save_as_child_of(root)
 
-        child1 = ExampleModel.objects.get(pk=child1.pk)
-        self.assertEqual(child1.get_abs_matrix(), (1, 1, 3, 2))
+        root, child1  = ExampleModel.objects.order_by('pk')
+        self.assertEqual(child1.get_abs_matrix(), (1, 1, 2, 1))
+
+        child2 = ExampleModel()
+        child2.save_as_child_of(root)
+
+        root, child1, child2 = ExampleModel.objects.order_by('pk')
+        self.assertEqual(child2.get_abs_matrix(), (2, 1, 3, 1))

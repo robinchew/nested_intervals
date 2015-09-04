@@ -30,8 +30,8 @@ class NestedIntervalsModelMixin(models.Model):
             for field_name, num in zip(self._nested_intervals_field_names, ROOT_MATRIX)})
 
     def set_as_root(self):
-        for field_name, num in zip(self._nested_intervals_field_names, ROOT_MATRIX)})
-            setattr(self, field_name, num)
+        for field_name, num in zip(self._nested_intervals_field_names, ROOT_MATRIX):
+            setattr(self, field_name, abs(num))
 
     def set_as_child_of(self, parent):
         num_children = children_of(self.__class__.objects, parent).count()
