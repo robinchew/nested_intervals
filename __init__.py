@@ -1,4 +1,3 @@
-
 try:
     from django.core.exceptions import FieldDoesNotExist
 except ImportError:
