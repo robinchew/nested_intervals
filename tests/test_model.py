@@ -1,9 +1,11 @@
 from django.core.exceptions import FieldError
+from django.contrib.auth.models import Group
 from django.db import models
 from django.test import TestCase
 
+import nested_intervals
 from nested_intervals.models import NestedIntervalsModelMixin
-from nested_intervals.tests.models import ExampleModel, InvalidExampleModel
+from nested_intervals.tests.models import ExampleModel
 
 
 class FakeModel(object):
@@ -12,16 +14,11 @@ class FakeModel(object):
 
 class TestModel(TestCase):
     def test_invalid_model(self):
-        with self.assertRaises(AttributeError) as context:
-            InvalidExampleModel()
-
-        self.assertIn("object has no attribute 'nested_intervals_field_names'", context.exception.message)
-
-    def test_invalid_model_2(self):
         with self.assertRaises(FieldError) as context:
-            class InvalidExampleModel2(NestedIntervalsModelMixin, FakeModel):
-                nested_intervals_field_names = ('a11', 'conflict', 'a21', 'a22')
+            class InvalidExampleModel(NestedIntervalsModelMixin, FakeModel):
                 conflict = models.CharField()
+
+            nested_intervals.register_fields(InvalidExampleModel, 'a11', 'conflict', 'a21', 'a22')
 
         self.assertEqual(
             context.exception.message,

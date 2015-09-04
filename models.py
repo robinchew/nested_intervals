@@ -1,10 +1,9 @@
-from django.core.exceptions import FieldError
 from django.db import models
 from django.db.models.base import ModelBase
 from django.utils import six
 
 from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQuerySet
-from nested_intervals.matrix import Matrix, get_child_matrix
+from nested_intervals.matrix import Matrix, ROOT_MATRIX, get_child_matrix
 from nested_intervals.queryset import children_of
 
 
