@@ -14,8 +14,8 @@ def get_model_field_names(model_class):
 
 def register_fields(model_class, *field_names):
     model_class._nested_intervals_field_names = field_names
-    for field_name in field_names:
+    for field_name, default in zip(field_names, (1,1,1,0)):
         if field_name in get_model_field_names(model_class):
             raise FieldError("'{}' is already an existing model field.".format(field_name))
 
-        django_models.PositiveIntegerField(default=0).contribute_to_class(model_class, field_name)
+        django_models.PositiveIntegerField(default=default).contribute_to_class(model_class, field_name)
