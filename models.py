@@ -7,43 +7,19 @@ from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQue
 from nested_intervals.matrix import Matrix, get_child_matrix
 
 
-class NestedIntervalsModelBase(ModelBase):
-    def __new__(metaclass, class_name, bases, attrs):
-        try:
-            name1, name2, name3, name4 = attrs.get('nested_intervals_field_names')
-
-            for field_name in (name1, name2, name3, name4):
-                if field_name in attrs:
-                    raise FieldError("'{}' is already an existing model field.".format(field_name))
-
-            attrs[name1] = models.PositiveIntegerField()
-            attrs[name2] = models.PositiveIntegerField()
-            attrs[name3] = models.PositiveIntegerField()
-            attrs[name4] = models.PositiveIntegerField()
-
-        except TypeError:
-            pass
-
-        return super(NestedIntervalsModelBase, metaclass).__new__(metaclass, class_name, bases, attrs)
-
-
 class NestedIntervalsModelMixin(models.Model):
     class Meta:
         abstract = True
 
-    def __init__(self, *args, **kwargs):
-        assert len(self.nested_intervals_field_names) == 4, "Set 4 field names in in 'nested_intervals_field_names' attribute in your model."
-        super(NestedIntervalsModelMixin, self).__init__(*args, **kwargs)
-
     def has_matrix(self):
         return any(
             getattr(self, field_name)
-            for field_name in self.nested_intervals_field_names)
+            for field_name in self._nested_intervals_field_names)
 
     def get_matrix(self):
         return Matrix(*(
             getattr(self, field_name) * (1 if (i % 2 == 0) else -1)
-            for i, field_name in enumerate(self.nested_intervals_field_names)))
+            for i, field_name in enumerate(self._nested_intervals_field_names)))
 
     def get_abs_matrix(self):
         return tuple(abs(num) for num in self.get_matrix())
@@ -53,11 +29,11 @@ class NestedIntervalsModelMixin(models.Model):
         # no row value in the database.
         return self.__class__(**{
             field_name: abs(num)
-            for field_name, num in zip(self.nested_intervals_field_names, ROOT_MATRIX)})
+            for field_name, num in zip(self._nested_intervals_field_names, ROOT_MATRIX)})
 
     def set_as_child_of(self, parent):
         num_children = self.__class__.nested_intervals.children_of(parent).count()
-        field_names = self.nested_intervals_field_names
+        field_names = self._nested_intervals_field_names
         child_matrix = get_child_matrix(parent.get_matrix(), num_children)
 
         for field_name, num in zip(field_names, child_matrix):
