@@ -5,6 +5,7 @@ from django.utils import six
 
 from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQuerySet
 from nested_intervals.matrix import Matrix, get_child_matrix
+from nested_intervals.queryset import children_of
 
 
 class NestedIntervalsModelMixin(models.Model):
@@ -32,8 +33,7 @@ class NestedIntervalsModelMixin(models.Model):
             for field_name, num in zip(self._nested_intervals_field_names, ROOT_MATRIX)})
 
     def set_as_child_of(self, parent):
-        assert type(getattr(self.__class__, 'nested_intervals')) is NestedIntervalsManager
-        num_children = self.__class__.nested_intervals.children_of(parent).count()
+        num_children = children_of(self.__class__.objects, parent).count()
         field_names = self._nested_intervals_field_names
         child_matrix = get_child_matrix(parent.get_matrix(), num_children+1)
 
