@@ -29,6 +29,13 @@ class NestedIntervalsModelMixin(models.Model):
             field_name: abs(num)
             for field_name, num in zip(self._nested_intervals_field_names, ROOT_MATRIX)})
 
+    def get_parent(self):
+        name11, name12, name21, name22 = self._nested_intervals_field_names
+        return self.__class__.objects.get(**{
+            name11: getattr(self, name12),
+            name21: getattr(self, name22)
+        })
+
     def set_as_root(self):
         for field_name, num in zip(self._nested_intervals_field_names, ROOT_MATRIX):
             setattr(self, field_name, abs(num))
