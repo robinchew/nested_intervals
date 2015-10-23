@@ -41,6 +41,13 @@ class NestedIntervalsModelMixin(models.Model):
             setattr(self, field_name, abs(num))
 
     def set_as_child_of(self, parent):
+        """
+        TODO
+        1. This behaves wrongly when used on new Home instance that
+           does not have any primary key set yet.
+        2. This should also the change the matrix of the descendents
+           of this instance.
+        """
         num_children = children_of(self.__class__.objects, parent).count()
         field_names = self._nested_intervals_field_names
         child_matrix = get_child_matrix(parent.get_matrix(), num_children+1)
