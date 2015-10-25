@@ -55,6 +55,10 @@ class NestedIntervalsModelMixin(models.Model):
         for field_name, num in zip(field_names, child_matrix):
             setattr(self, field_name, abs(num))
 
+    def set_matrix(self, matrix):
+        for field_name, num in zip(self._nested_intervals_field_names, matrix):
+            setattr(self, field_name, abs(num))
+
     def save_as_child_of(self, parent, *args, **kwargs):
         self.set_as_child_of(parent)
         self.save(*args, **kwargs)
