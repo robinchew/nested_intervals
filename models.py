@@ -4,7 +4,7 @@ from django.db.models.base import ModelBase
 from django.utils import six
 
 from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQuerySet
-from nested_intervals.matrix import Matrix, get_child_matrix, get_ancestors_matrix
+from nested_intervals.matrix import Matrix, get_child_matrix, get_ancestors_matrix, get_root_matrix
 from nested_intervals.queryset import children_of
 
 
@@ -36,8 +36,9 @@ class NestedIntervalsModelMixin(models.Model):
         return Matrix(*tuple(abs(num) for num in self.get_matrix()))
 
     def get_root(self):
-        last_matrix = get_ancestors_matrix(self.get_matrix())[-1]
-        return self.__class__.objects.get(**self.__class__.build_nested_intervals_query_kwargs(*last_matrix))
+        return self.__class__.objects.get(
+            **self.__class__.build_nested_intervals_query_kwargs(
+                *get_root_matrix(self.get_matrix())))
 
     def get_parent(self):
         name11, name12, name21, name22 = self._nested_intervals_field_names
@@ -54,6 +55,9 @@ class NestedIntervalsModelMixin(models.Model):
 
     def get_ancestors(self):
         return self.__class__.objects.filter(self.get_ancestors_query())
+
+    def get_descendants_query(self):
+        pass
 
     def set_as_child_of(self, parent):
         """

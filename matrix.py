@@ -77,3 +77,6 @@ def _build_ancestors_matrix(matrix, l):
 
 def get_ancestors_matrix(matrix):
     return _build_ancestors_matrix(matrix, pvector())
+
+def get_root_matrix(matrix):
+    return get_ancestors_matrix(matrix)[-1]
