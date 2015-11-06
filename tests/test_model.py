@@ -125,3 +125,9 @@ class TestModel(TestCase):
         self.assertEqual(
             ExampleModel.objects.get(**ExampleModel.build_nested_intervals_query_kwargs(2, 1, 5, 2)).get_root(),
             tree['1'])
+
+    def test_descendants(self):
+        tree = create_test_tree()
+        self.assertEqual(
+            list(tree['2'].get_descendants().order_by('pk')),
+            [tree[i] for i in ('2.1', '2.1.1', '2.2')])

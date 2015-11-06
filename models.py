@@ -56,8 +56,19 @@ class NestedIntervalsModelMixin(models.Model):
     def get_ancestors(self):
         return self.__class__.objects.filter(self.get_ancestors_query())
 
-    def get_descendants_query(self):
-        pass
+    def get_descendants(self):
+        name11, name12, name21, name22 = self._nested_intervals_field_names
+        a11, a12, a21, a22 = self.get_abs_matrix()
+
+        s1 = a11 - a12 # 's' stands for sibling
+        s2 = a21 - a22
+
+        return self.__class__.objects.extra(
+            where=[
+                "({} * %s) >= (%s * {})".format(name11, name21),
+                "({} * %s) <= (%s * {})".format(name12, name22)
+            ],
+            params=[s2, s1, a21, a11])
 
     def set_as_child_of(self, parent):
         """
