@@ -46,11 +46,14 @@ class NestedIntervalsModelMixin(models.Model):
             name21: getattr(self, name22)
         })
 
+    def get_ancestors_query(self):
+        return reduce(
+            lambda a, b: a | Q(**self.__class__.build_nested_intervals_query_kwargs(*b)),
+            get_ancestors_matrix(self.get_matrix()),
+            Q())
+
     def get_ancestors(self):
-        q = Q()
-        for a11, a12, a21, a22 in get_ancestors_matrix(self.get_matrix()):
-            q = q | Q(**self.__class__.build_nested_intervals_query_kwargs(a11, a12, a21, a22))
-        return self.__class__.objects.filter(q)
+        return self.__class__.objects.filter(self.get_ancestors_query())
 
     def set_as_child_of(self, parent):
         """
