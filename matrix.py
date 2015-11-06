@@ -1,4 +1,5 @@
 from decimal import Decimal
+from pyrsistent import pvector
 import math
 
 
@@ -21,6 +22,17 @@ class Matrix(object):
             m1.a21 * m2.a12 + m1.a22 * m2.a22
         )
 
+    def __eq__(self, other):
+        if self.a11 != other.a11:
+            return False
+        if self.a12 != other.a12:
+            return False
+        if self.a21 != other.a21:
+            return False
+        if self.a22 != other.a22:
+            return False
+        return True
+
     def __iter__(self):
         for a in (self.a11, self.a12, self.a21, self.a22):
             yield a
@@ -38,9 +50,18 @@ def get_child_matrix(matrix, nth_child):
 
 
 def get_parent_matrix(matrix):
-    nth_child = math.floor(abs(Decimal(matrix.a11)) / abs(Decimal(matrix.a12)))
+    nth_child = int(math.floor(abs(Decimal(matrix.a11)) / abs(Decimal(matrix.a12))))
     return Matrix(
         matrix.a11 * 0 + matrix.a12 * (-1),
         matrix.a11 * 1 + matrix.a12 * ((nth_child+1)),
         matrix.a21 * 0 + matrix.a22 * (-1),
         matrix.a21 * 1 + matrix.a22 * ((nth_child+1)))
+
+def _build_ancestors_matrix(matrix, l):
+    if matrix == ROOT_MATRIX:
+        return l
+    parent_matrix = get_parent_matrix(matrix)
+    return _build_ancestors_matrix(parent_matrix, l.append(parent_matrix))
+
+def get_ancestors_matrix(matrix):
+    return _build_ancestors_matrix(matrix, pvector())
