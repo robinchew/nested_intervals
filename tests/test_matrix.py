@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from nested_intervals.matrix import ROOT_MATRIX, Matrix, get_ancestors_matrix
+from nested_intervals.matrix import Matrix, get_ancestors_matrix
 
 
 class MatrixTest(TestCase):

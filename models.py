@@ -1,15 +1,26 @@
 from django.db import models
+from django.db.models import Q
 from django.db.models.base import ModelBase
 from django.utils import six
 
 from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQuerySet
-from nested_intervals.matrix import Matrix, ROOT_MATRIX, get_child_matrix
+from nested_intervals.matrix import Matrix, ROOT_MATRIX, get_child_matrix, get_ancestors_matrix
 from nested_intervals.queryset import children_of
 
 
 class NestedIntervalsModelMixin(models.Model):
     class Meta:
         abstract = True
+
+    @classmethod
+    def build_nested_intervals_query_kwargs(cls, a11, a12, a21, a22):
+        name11, name12, name21, name22 = cls._nested_intervals_field_names
+        return {
+            name11: abs(a11),
+            name12: abs(a12),
+            name21: abs(a21),
+            name22: abs(a22),
+        }
 
     def has_matrix(self):
         return any(
@@ -22,7 +33,7 @@ class NestedIntervalsModelMixin(models.Model):
             for i, field_name in enumerate(self._nested_intervals_field_names)))
 
     def get_abs_matrix(self):
-        return tuple(abs(num) for num in self.get_matrix())
+        return Matrix(*tuple(abs(num) for num in self.get_matrix()))
 
     def get_root(self):
         return self.__class__.objects.get(**{
@@ -35,6 +46,12 @@ class NestedIntervalsModelMixin(models.Model):
             name11: getattr(self, name12),
             name21: getattr(self, name22)
         })
+
+    def get_ancestors(self):
+        q = Q()
+        for a11, a12, a21, a22 in get_ancestors_matrix(self.get_matrix()):
+            q = q | Q(**self.__class__.build_nested_intervals_query_kwargs(a11, a12, a21, a22))
+        return self.__class__.objects.filter(q)
 
     def set_as_root(self):
         for field_name, num in zip(self._nested_intervals_field_names, ROOT_MATRIX):
