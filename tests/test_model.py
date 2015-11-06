@@ -32,6 +32,18 @@ def create_test_tree():
     child_3_1 = ExampleModel()
     child_3_1.save_as_child_of(child_3)
 
+    return {
+        '1': child_1,
+        '1.1': child_1_1,
+        '1.2': child_1_2,
+        '2': child_2,
+        '2.1': child_2_1,
+        '2.1.1': child_2_1_1,
+        '2.2': child_2_2,
+        '3': child_3,
+        '3.1': child_3_1,
+    }
+
 
 class FakeModel(object):
     pass
@@ -106,3 +118,10 @@ class TestModel(TestCase):
                     (3, 2, 5 ,3),
                 )
             ])
+
+    def test_root(self):
+        tree = create_test_tree()
+
+        self.assertEqual(
+            ExampleModel.objects.get(**ExampleModel.build_nested_intervals_query_kwargs(2, 1, 5, 2)).get_root(),
+            tree['1'])

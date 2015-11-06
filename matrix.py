@@ -37,7 +37,19 @@ class Matrix(object):
         for a in (self.a11, self.a12, self.a21, self.a22):
             yield a
 
-ROOT_MATRIX = Matrix(1, -1, 1, 0)
+"""
+This Nested Intervals is designed such that the database table does NOT
+contain any row that represents the one true definitive original root matrix
+that all nodes branches off from.
+
+Any 'Root' row that exists in the database table is actually the child
+of the invisible root.
+
+Any model that calls get_ancestors will NEVER include an instance that
+has the INVISIBLE_ROOT_MATRIX, because once again, the invisible root does
+not exist in the database.
+"""
+INVISIBLE_ROOT_MATRIX = Matrix(1, -1, 1, 0)
 
 def get_child_matrix(matrix, nth_child):
     """
@@ -59,7 +71,7 @@ def get_parent_matrix(matrix):
 
 def _build_ancestors_matrix(matrix, l):
     parent_matrix = get_parent_matrix(matrix)
-    if parent_matrix == ROOT_MATRIX:
+    if parent_matrix == INVISIBLE_ROOT_MATRIX:
         return l
     return _build_ancestors_matrix(parent_matrix, l.append(parent_matrix))
 
