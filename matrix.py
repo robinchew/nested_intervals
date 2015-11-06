@@ -63,11 +63,16 @@ def get_child_matrix(matrix, nth_child):
 
 def get_parent_matrix(matrix):
     nth_child = int(math.floor(abs(Decimal(matrix.a11)) / abs(Decimal(matrix.a12))))
-    return Matrix(
+    parent_matrix = Matrix(
         matrix.a11 * 0 + matrix.a12 * (-1),
         matrix.a11 * 1 + matrix.a12 * ((nth_child+1)),
         matrix.a21 * 0 + matrix.a22 * (-1),
         matrix.a21 * 1 + matrix.a22 * ((nth_child+1)))
+
+    a11, a12, a21, a22 = matrix
+    p11, p12, p21, p22 = parent_matrix
+    assert abs(a12) == p11 and abs(a22) == p21
+    return parent_matrix
 
 def _build_ancestors_matrix(matrix, l):
     parent_matrix = get_parent_matrix(matrix)
