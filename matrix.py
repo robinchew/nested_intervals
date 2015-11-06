@@ -58,9 +58,9 @@ def get_parent_matrix(matrix):
         matrix.a21 * 1 + matrix.a22 * ((nth_child+1)))
 
 def _build_ancestors_matrix(matrix, l):
-    if matrix == ROOT_MATRIX:
-        return l
     parent_matrix = get_parent_matrix(matrix)
+    if parent_matrix == ROOT_MATRIX:
+        return l
     return _build_ancestors_matrix(parent_matrix, l.append(parent_matrix))
 
 def get_ancestors_matrix(matrix):
