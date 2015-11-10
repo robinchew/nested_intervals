@@ -54,7 +54,10 @@ class NestedIntervalsModelMixin(models.Model):
             Q())
 
     def get_ancestors(self):
-        return self.__class__.objects.filter(self.get_ancestors_query())
+        query = self.get_ancestors_query()
+        if query:
+            return self.__class__.objects.filter(query)
+        return self.__class__.objects.none()
 
     def get_descendants(self):
         name11, name12, name21, name22 = self._nested_intervals_field_names

@@ -104,7 +104,7 @@ class TestModel(TestCase):
         self.assertEqual(child2.get_abs_matrix(), Matrix(2, 1, 3, 1))
 
     def test_ancestors(self):
-        create_test_tree()
+        tree = create_test_tree()
 
         child_2_1_1 = ExampleModel.objects.get(
             **ExampleModel.build_nested_intervals_query_kwargs(4, 3, 7, 5))
@@ -118,6 +118,9 @@ class TestModel(TestCase):
                     (3, 2, 5 ,3),
                 )
             ])
+
+        # Test no ancestor matches
+        self.assertEqual(tree['2'].get_ancestors().count(), 0)
 
     def test_root(self):
         tree = create_test_tree()
