@@ -60,6 +60,10 @@ def get_child_matrix(matrix, nth_child):
     assert nth_child >= 1
     return matrix * Matrix(nth_child+1, -1, 1, 0)
 
+def is_child_of_parent_matrix(child_matrix, parent_matrix):
+    a11, a12, a21, a22 = child_matrix
+    p11, p12, p21, p22 = parent_matrix
+    return abs(a12) == p11 and abs(a22) == p21
 
 def get_parent_matrix(matrix):
     nth_child = int(math.floor(abs(Decimal(matrix.a11)) / abs(Decimal(matrix.a12))))
@@ -69,9 +73,7 @@ def get_parent_matrix(matrix):
         matrix.a21 * 0 + matrix.a22 * (-1),
         matrix.a21 * 1 + matrix.a22 * ((nth_child+1)))
 
-    a11, a12, a21, a22 = matrix
-    p11, p12, p21, p22 = parent_matrix
-    assert abs(a12) == p11 and abs(a22) == p21
+    assert is_child_of_parent_matrix(matrix, parent_matrix), "Invalid matrix as argument."
     return parent_matrix
 
 def _build_ancestors_matrix(matrix, l):
