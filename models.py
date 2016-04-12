@@ -5,7 +5,9 @@ from django.utils import six
 
 from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQuerySet
 from nested_intervals.matrix import Matrix, get_child_matrix, get_ancestors_matrix, get_root_matrix
+from nested_intervals.matrix import INVISIBLE_ROOT_MATRIX
 from nested_intervals.queryset import children_of
+from nested_intervals.queryset import children_of_matrix
 
 
 class NestedIntervalsModelMixin(models.Model):
@@ -100,9 +102,16 @@ class NestedIntervalsModelMixin(models.Model):
         self.save(*args, **kwargs)
         return self
 
-    def save(self, *args, **kwargs):
-        super(NestedIntervalsModelMixin, self).save(*args, **kwargs)
+    def set_as_root(self):
+        num_children = children_of_matrix(self.__class__.objects, INVISIBLE_ROOT_MATRIX).count()
 
-    def new_child(self):
-        new_child = self.__class__()
-        return new_child.set_as_child_of(self)
+        field_names = self._nested_intervals_field_names
+        child_matrix = get_child_matrix(INVISIBLE_ROOT_MATRIX, num_children+1)
+
+        for field_name, num in zip(field_names, child_matrix):
+            setattr(self, field_name, abs(num))
+
+    def save_as_root(self, *args, **kwargs):
+        self.set_as_root()
+        self.save(*args, **kwargs)
+        return self

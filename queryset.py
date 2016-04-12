@@ -1,5 +1,14 @@
 from django.db import models
 
+def children_of_matrix(queryset, matrix):
+    name11, name12, name21, name22 = queryset.model._nested_intervals_field_names
+    parent_value11, parent_value12, parent_value21, parent_value22 = matrix
+
+    return queryset.filter(**{
+        name12: parent_value11,
+        name22: parent_value21
+    })
+
 def children_of(parent, queryset=None):
     if queryset is None:
         queryset = parent.__class__.objects

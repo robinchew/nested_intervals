@@ -65,43 +65,43 @@ class TestModel(TestCase):
         self.assertEqual(ExampleModel.objects.count(), 0)
 
         model = ExampleModel()
-        model.save()
+        model.save_as_root()
 
         model = ExampleModel.objects.all().get()
 
         self.assertEqual(model.lnumerator, 1)
-        self.assertEqual(model.ldenominator, 1)
         self.assertEqual(model.rnumerator, 1)
-        self.assertEqual(model.rdenominator, 0)
+        self.assertEqual(model.ldenominator, 2)
+        self.assertEqual(model.rdenominator, 1)
 
         model = ExampleModel()
-        model.save()
+        model.save_as_root()
 
         model1, model2 = ExampleModel.objects.order_by('pk')
 
-        self.assertEqual(model2.lnumerator, 1)
-        self.assertEqual(model2.ldenominator, 1)
+        self.assertEqual(model2.lnumerator, 2)
         self.assertEqual(model2.rnumerator, 1)
-        self.assertEqual(model2.rdenominator, 0)
+        self.assertEqual(model2.ldenominator, 3)
+        self.assertEqual(model2.rdenominator, 1)
 
     def test_save_children(self):
         root = ExampleModel()
-        root.save()
+        root.save_as_root()
 
         root = ExampleModel.objects.all().get()
-        self.assertEqual(root.get_abs_matrix(), Matrix(1, 1, 1, 0))
+        self.assertEqual(root.get_abs_matrix(), Matrix(1, 1, 2, 1))
 
         child1 = ExampleModel()
         child1.save_as_child_of(root)
 
         root, child1  = ExampleModel.objects.order_by('pk')
-        self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 2, 1))
+        self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))
 
         child2 = ExampleModel()
         child2.save_as_child_of(root)
 
         root, child1, child2 = ExampleModel.objects.order_by('pk')
-        self.assertEqual(child2.get_abs_matrix(), Matrix(2, 1, 3, 1))
+        self.assertEqual(child2.get_abs_matrix(), Matrix(2, 1, 5, 2))
 
     def test_ancestors(self):
         tree = create_test_tree()
