@@ -11,28 +11,30 @@ from nested_intervals.tests.models import ExampleModel
 
 def create_test_tree():
     root = ExampleModel()
-    child_1 = ExampleModel()
+    root.save_as_root() # 1 1 2 1
+    child_1 = ExampleModel() # 1 1 3 2
     child_1.save_as_child_of(root)
-    child_1_1 = ExampleModel()
+    child_1_1 = ExampleModel() # 1 1 4 3
     child_1_1.save_as_child_of(child_1)
-    child_1_2 = ExampleModel()
+    child_1_2 = ExampleModel() # 2 1 7 3
     child_1_2.save_as_child_of(child_1)
 
-    child_2 = ExampleModel()
+    child_2 = ExampleModel() # 2 1 5 2
     child_2.save_as_child_of(root)
-    child_2_1 = ExampleModel()
+    child_2_1 = ExampleModel() # 3 2 8 5
     child_2_1.save_as_child_of(child_2)
-    child_2_1_1 = ExampleModel()
+    child_2_1_1 = ExampleModel() # 4 3 11 8
     child_2_1_1.save_as_child_of(child_2_1)
-    child_2_2 = ExampleModel()
+    child_2_2 = ExampleModel() # 5 2 13 5
     child_2_2.save_as_child_of(child_2)
 
-    child_3 = ExampleModel()
+    child_3 = ExampleModel() # 3 1 7 2
     child_3.save_as_child_of(root)
-    child_3_1 = ExampleModel()
+    child_3_1 = ExampleModel() # 5 3 12 7
     child_3_1.save_as_child_of(child_3)
 
     return {
+        '0': root,
         '1': child_1,
         '1.1': child_1_1,
         '1.2': child_1_2,
@@ -107,27 +109,28 @@ class TestModel(TestCase):
         tree = create_test_tree()
 
         child_2_1_1 = ExampleModel.objects.get(
-            **ExampleModel.build_nested_intervals_query_kwargs(4, 3, 7, 5))
+            **ExampleModel.build_nested_intervals_query_kwargs(4, 3, 11, 8))
 
         self.assertEqual(
             list(child_2_1_1.get_ancestors().order_by('pk')),
             [
                 ExampleModel.objects.get(**ExampleModel.build_nested_intervals_query_kwargs(a11, a12, a21, a22))
                 for a11, a12, a21, a22 in (
-                    (2, 1, 3 ,1),
-                    (3, 2, 5 ,3),
+                    (1, 1, 2 ,1),
+                    (2, 1, 5 ,2),
+                    (3, 2, 8 ,5),
                 )
             ])
 
         # Test no ancestor matches
-        self.assertEqual(tree['2'].get_ancestors().count(), 0)
+        self.assertEqual(tree['0'].get_ancestors().count(), 0)
 
     def test_root(self):
         tree = create_test_tree()
 
         self.assertEqual(
             ExampleModel.objects.get(**ExampleModel.build_nested_intervals_query_kwargs(2, 1, 5, 2)).get_root(),
-            tree['1'])
+            tree['0'])
 
     def test_descendants(self):
         tree = create_test_tree()
