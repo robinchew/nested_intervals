@@ -59,6 +59,9 @@ class NestedIntervalsModelMixin(models.Model):
             return self.__class__.objects.filter(query)
         return self.__class__.objects.none()
 
+    def get_children(self):
+        return children_of(self)
+
     def get_descendants(self):
         name11, name12, name21, name22 = self._nested_intervals_field_names
         a11, a12, a21, a22 = self.get_abs_matrix()
@@ -81,7 +84,7 @@ class NestedIntervalsModelMixin(models.Model):
         2. This should also the change the matrix of the descendents
            of this instance.
         """
-        num_children = children_of(self.__class__.objects, parent).count()
+        num_children = children_of(parent).count()
         field_names = self._nested_intervals_field_names
         child_matrix = get_child_matrix(parent.get_matrix(), num_children+1)
 
@@ -95,6 +98,11 @@ class NestedIntervalsModelMixin(models.Model):
     def save_as_child_of(self, parent, *args, **kwargs):
         self.set_as_child_of(parent)
         self.save(*args, **kwargs)
+        return self
 
     def save(self, *args, **kwargs):
         super(NestedIntervalsModelMixin, self).save(*args, **kwargs)
+
+    def new_child(self):
+        new_child = self.__class__()
+        return new_child.set_as_child_of(self)
