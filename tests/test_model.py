@@ -158,6 +158,22 @@ class TestModel(TestCase):
     """
 
 class ChildTest(TestCase):
+    def test_save_child_repeatedly(self):
+        """
+        Saving the same child to the same parent will
+        make the child younger and younger.
+        """
+        root = ExampleModel()
+        root.save_as_root()
+
+        child1 = ExampleModel()
+        child1.save_as_child_of(root)
+
+        self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))
+
+        child1.save_as_child_of(root)
+        self.assertEqual(child1.get_abs_matrix(), Matrix(2, 1, 5, 2))
+
     def test_set_child_after_deleting_sibling(self):
         root = ExampleModel()
         root.save_as_root() # 1 1 2 1
