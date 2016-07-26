@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import F
 
+from nested_intervals.matrix import get_child_matrix
 from nested_intervals.exceptions import NoChildrenError
 
 def children_of_matrix(queryset, matrix):
@@ -30,6 +31,19 @@ def last_child_of(parent):
         return children_of(parent).order_by((F(name11) * F(name12)).desc())[0]
     except IndexError:
         raise NoChildrenError()
+
+def reroot(node, root_matrix):
+    try:
+        children = node.get_children()
+    except:
+        children = []
+    node.set_matrix(root_matrix)
+
+    more = []
+    for i, child in enumerate(children):
+        child_matrix = get_child_matrix(root_matrix, i+1)
+        more = more + reroot(child, child_matrix)
+    return [node] + list(children) + more
 
 class NestedIntervalsQuerySet(models.QuerySet):
     def children_of(self, parent):

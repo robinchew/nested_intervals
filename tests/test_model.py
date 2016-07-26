@@ -139,7 +139,6 @@ class TestModel(TestCase):
             list(tree['2'].get_descendants().order_by('pk')),
             [tree[i] for i in ('2.1', '2.1.1', '2.2')])
 
-    """
     def test_move_child_to_new_parent_along_with_descendants(self):
         tree = create_test_tree()
 
@@ -149,13 +148,14 @@ class TestModel(TestCase):
             [tree[i] for i in ('2.1', '2.1.1', '2.2')]
         )
 
-        tree['2'].save_as_child_of(tree['3'])
+        for child in tree['2'].set_as_child_of(tree['3']):
+            child.save()
+
         self.assertEqual(tree['2'].get_parent(), tree['3'])
         self.assertEqual(
-            list(tree['2'].get_descendants().order_by('pk')),
-            [tree[i] for i in ('2.1', '2.1.1', '2.2')]
+            [i.pk for i in tree['2'].get_descendants().order_by('pk')],
+            [tree[i].pk for i in ('2.1', '2.1.1', '2.2')]
         )
-    """
 
 class ChildTest(TestCase):
     def test_save_child_repeatedly(self):
