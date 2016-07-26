@@ -3,11 +3,13 @@ from django.db.models import Q
 from django.db.models.base import ModelBase
 from django.utils import six
 
+from nested_intervals.exceptions import NoChildrenError
 from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQuerySet
 from nested_intervals.matrix import Matrix, get_child_matrix, get_ancestors_matrix, get_root_matrix
 from nested_intervals.matrix import INVISIBLE_ROOT_MATRIX
 from nested_intervals.queryset import children_of
 from nested_intervals.queryset import children_of_matrix
+from nested_intervals.queryset import last_child_of
 
 
 class NestedIntervalsModelMixin(models.Model):
@@ -86,9 +88,15 @@ class NestedIntervalsModelMixin(models.Model):
         2. This should also the change the matrix of the descendents
            of this instance.
         """
-        num_children = children_of(parent).count()
+        name11, name12, name21, name22 = parent._nested_intervals_field_names
+        try:
+            last_child = last_child_of(parent)
+        except NoChildrenError:
+            nth_child = 0
+        else:
+            nth_child = int(getattr(last_child, name11) / getattr(last_child, name12))
         field_names = self._nested_intervals_field_names
-        child_matrix = get_child_matrix(parent.get_matrix(), num_children+1)
+        child_matrix = get_child_matrix(parent.get_matrix(), nth_child+1)
 
         for field_name, num in zip(field_names, child_matrix):
             setattr(self, field_name, abs(num))

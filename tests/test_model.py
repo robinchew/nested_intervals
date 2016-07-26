@@ -7,6 +7,7 @@ import nested_intervals
 from nested_intervals.matrix import Matrix
 from nested_intervals.models import NestedIntervalsModelMixin
 from nested_intervals.tests.models import ExampleModel
+from nested_intervals.queryset import last_child_of
 
 
 def create_test_tree():
@@ -137,3 +138,46 @@ class TestModel(TestCase):
         self.assertEqual(
             list(tree['2'].get_descendants().order_by('pk')),
             [tree[i] for i in ('2.1', '2.1.1', '2.2')])
+
+    """
+    def test_move_child_to_new_parent_along_with_descendants(self):
+        tree = create_test_tree()
+
+        self.assertEqual(tree['2'].get_parent(), tree['0'])
+        self.assertEqual(
+            list(tree['2'].get_descendants().order_by('pk')),
+            [tree[i] for i in ('2.1', '2.1.1', '2.2')]
+        )
+
+        tree['2'].save_as_child_of(tree['3'])
+        self.assertEqual(tree['2'].get_parent(), tree['3'])
+        self.assertEqual(
+            list(tree['2'].get_descendants().order_by('pk')),
+            [tree[i] for i in ('2.1', '2.1.1', '2.2')]
+        )
+    """
+
+class ChildTest(TestCase):
+    def test_set_child_after_deleting_sibling(self):
+        root = ExampleModel()
+        root.save_as_root() # 1 1 2 1
+
+        child1 = ExampleModel() # 1 1 3 2
+        child1.save_as_child_of(root)
+        child2 = ExampleModel() # 2 1 5 2
+        child2.save_as_child_of(root)
+        child3 = ExampleModel() # 3 1 7 2
+        child3.save_as_child_of(root)
+
+        self.assertEqual(root.get_abs_matrix(), Matrix(1, 1, 2, 1))
+        self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))
+        self.assertEqual(child2.get_abs_matrix(), Matrix(2, 1, 5, 2))
+        self.assertEqual(child3.get_abs_matrix(), Matrix(3, 1, 7, 2))
+
+        child2.delete()
+
+        self.assertEqual(last_child_of(root), child3)
+
+        child4 = ExampleModel() # 4 1 9 2
+        child4.save_as_child_of(root)
+        self.assertEqual(child4.get_abs_matrix(), Matrix(4, 1, 9, 2))
