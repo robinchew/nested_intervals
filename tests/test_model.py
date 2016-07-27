@@ -219,6 +219,27 @@ class TestModel(TestCase):
         self.assertEqual(tree['2.2'].get_matrix(), Matrix(21, -8, 50, -19))
 
 class ChildTest(TestCase):
+    def test_save_root_after_deleting_old_root(self):
+        root1 = ExampleModel()
+        root1.save_as_root()
+
+        root2 = ExampleModel()
+        root2.save_as_root()
+
+        root3 = ExampleModel()
+        root3.save_as_root()
+
+        self.assertEqual(root1.get_matrix(), Matrix(1, -1, 2, -1))
+        self.assertEqual(root2.get_matrix(), Matrix(2, -1, 3, -1))
+        self.assertEqual(root3.get_matrix(), Matrix(3, -1, 4, -1))
+
+        root2.delete()
+
+        root4 = ExampleModel()
+        root4.save_as_root()
+        self.assertEqual(root4.get_matrix(), Matrix(4, -1, 5, -1))
+
+
     def test_save_child_repeatedly(self):
         """
         Saving the same child to the same parent will

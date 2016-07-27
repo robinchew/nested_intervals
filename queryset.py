@@ -30,6 +30,18 @@ def children_of(parent, queryset=None):
         name22: parent_value21
     })
 
+def last_child_of_matrix(queryset, parent_matrix):
+    name11, name12, name21, name22 = queryset.model._nested_intervals_field_names
+    v11, v12, v21, v22 = (abs(v) for v in parent_matrix)
+
+    try:
+        return queryset.filter(**{
+            name12: v11,
+            name22: v21
+        }).order_by((F(name11) * F(name12)).desc())[0]
+    except IndexError:
+        raise NoChildrenError()
+
 def last_child_of(parent):
     validate_node(parent)
     name11, name12, name21, name22 = parent._nested_intervals_field_names

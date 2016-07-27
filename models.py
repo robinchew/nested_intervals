@@ -8,10 +8,13 @@ from nested_intervals.exceptions import InvalidNodeError
 from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQuerySet
 from nested_intervals.matrix import Matrix, get_child_matrix, get_ancestors_matrix, get_root_matrix
 from nested_intervals.matrix import INVISIBLE_ROOT_MATRIX
+
 from nested_intervals.queryset import children_of
 from nested_intervals.queryset import children_of_matrix
 from nested_intervals.queryset import last_child_of
+from nested_intervals.queryset import last_child_of_matrix
 from nested_intervals.queryset import reroot_matrix
+
 from nested_intervals.validation import validate_node
 
 
@@ -83,23 +86,19 @@ class NestedIntervalsModelMixin(models.Model):
             ],
             params=[s2, s1, a21, a11])
 
-    def set_as_child_of(self, parent):
-        """
-        TODO
-        1. This behaves wrongly when used on new Home instance that
-           does not have any primary key set yet.
-        2. This should also the change the matrix of the descendents
-           of this instance.
-        """
-        name11, name12, name21, name22 = parent._nested_intervals_field_names
+    def get_nth(self):
+        n11, n12, n21, n22 = self._nested_intervals_field_names
+        return int(getattr(self, n11) / getattr(self, n12))
+
+    def set_as_child_of_matrix(self, parent_matrix):
         try:
-            last_child = last_child_of(parent)
+            last_child = last_child_of_matrix(self.__class__.objects, parent_matrix)
         except NoChildrenError:
             nth_child = 0
         else:
-            nth_child = int(getattr(last_child, name11) / getattr(last_child, name12))
-        field_names = self._nested_intervals_field_names
-        child_matrix = get_child_matrix(parent.get_matrix(), nth_child+1)
+            nth_child = last_child.get_nth()
+
+        child_matrix = get_child_matrix(parent_matrix, nth_child+1)
 
         try:
             validate_node(self)
@@ -115,6 +114,9 @@ class NestedIntervalsModelMixin(models.Model):
         # function.
         return reroot_matrix(self, child_matrix)
 
+    def set_as_child_of(self, parent):
+        return self.set_as_child_of_matrix(parent.get_matrix())
+
     def set_matrix(self, matrix):
         for field_name, num in zip(self._nested_intervals_field_names, matrix):
             setattr(self, field_name, abs(num))
@@ -126,13 +128,7 @@ class NestedIntervalsModelMixin(models.Model):
         return nodes
 
     def set_as_root(self):
-        num_children = children_of_matrix(self.__class__.objects, INVISIBLE_ROOT_MATRIX).count()
-
-        field_names = self._nested_intervals_field_names
-        child_matrix = get_child_matrix(INVISIBLE_ROOT_MATRIX, num_children+1)
-
-        for field_name, num in zip(field_names, child_matrix):
-            setattr(self, field_name, abs(num))
+        return self.set_as_child_of_matrix(INVISIBLE_ROOT_MATRIX)
 
     def save_as_root(self, *args, **kwargs):
         self.set_as_root()
