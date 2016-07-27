@@ -5,6 +5,9 @@ from nested_intervals.matrix import get_child_matrix
 from nested_intervals.exceptions import NoChildrenError
 from nested_intervals.validation import validate_node
 
+import functools
+import operator
+
 def children_of_matrix(queryset, matrix):
     name11, name12, name21, name22 = queryset.model._nested_intervals_field_names
     parent_value11, parent_value12, parent_value21, parent_value22 = matrix
@@ -40,11 +43,18 @@ def reroot_matrix(node, root_matrix):
     children = node.get_children()
     node.set_matrix(root_matrix)
 
-    more = []
-    for i, child in enumerate(children):
-        child_matrix = get_child_matrix(root_matrix, i+1)
-        more = more + reroot_matrix(child, child_matrix)
-    return [node] + list(children) + more
+    descendants = functools.reduce(
+        operator.add,
+        (
+            reroot_matrix(
+                child,
+                get_child_matrix(root_matrix, i+1)
+            )
+            for i, child in enumerate(children)
+        ),
+        (),
+    )
+    return (node,) + tuple(children) + descendants
 
 class NestedIntervalsQuerySet(models.QuerySet):
     def children_of(self, parent):
