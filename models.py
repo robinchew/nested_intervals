@@ -10,7 +10,7 @@ from nested_intervals.matrix import INVISIBLE_ROOT_MATRIX
 from nested_intervals.queryset import children_of
 from nested_intervals.queryset import children_of_matrix
 from nested_intervals.queryset import last_child_of
-from nested_intervals.queryset import reroot
+from nested_intervals.queryset import reroot_matrix
 
 
 class NestedIntervalsModelMixin(models.Model):
@@ -99,7 +99,7 @@ class NestedIntervalsModelMixin(models.Model):
         field_names = self._nested_intervals_field_names
         child_matrix = get_child_matrix(parent.get_matrix(), nth_child+1)
 
-        return reroot(self, child_matrix)
+        return reroot_matrix(self, child_matrix)
 
     def set_matrix(self, matrix):
         for field_name, num in zip(self._nested_intervals_field_names, matrix):
