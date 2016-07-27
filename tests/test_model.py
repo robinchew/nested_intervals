@@ -10,6 +10,24 @@ from nested_intervals.tests.models import ExampleModel
 from nested_intervals.queryset import last_child_of
 
 
+class Tree(dict):
+    def __init__(self, d):
+        self.d = d
+        super(Tree, self).__init__(d)
+
+    def __getitem__(self, key):
+        return ExampleModel.objects.get(pk=self.d[key].pk)
+
+    def items(self):
+        return (self[k] for k in super(Tree, self))
+
+    def formatted(self):
+        return {
+            (self[k].pk, self[k], k)
+            for k in self
+        }
+
+
 def create_test_tree():
     root = ExampleModel()
     root.save_as_root() # 1 1 2 1
@@ -34,7 +52,7 @@ def create_test_tree():
     child_3_1 = ExampleModel() # 5 3 12 7
     child_3_1.save_as_child_of(child_3)
 
-    return {
+    return Tree({
         '0': root,
         '1': child_1,
         '1.1': child_1_1,
@@ -45,7 +63,7 @@ def create_test_tree():
         '2.2': child_2_2,
         '3': child_3,
         '3.1': child_3_1,
-    }
+    })
 
 
 class FakeModel(object):
@@ -148,6 +166,8 @@ class TestModel(TestCase):
             [tree[i] for i in ('2.1', '2.1.1', '2.2')]
         )
 
+        # Make 2 child of 3
+
         for child in tree['2'].set_as_child_of(tree['3']):
             child.save()
 
@@ -155,6 +175,20 @@ class TestModel(TestCase):
         self.assertEqual(
             [i.pk for i in tree['2'].get_descendants().order_by('pk')],
             [tree[i].pk for i in ('2.1', '2.1.1', '2.2')]
+        )
+
+        self.assertEqual(
+            [i.pk for i in tree['3'].get_descendants().order_by('pk')],
+            [tree[i].pk for i in ('2', '2.1', '2.1.1', '2.2', '3.1')]
+        )
+
+        # Make 2.1 child of 1.1
+
+        tree['2.1'].save_as_child_of(tree['1.1'])
+
+        self.assertEqual(
+            [i.pk for i in tree['3'].get_descendants().order_by('pk')],
+            [tree[i].pk for i in ('2', '2.2', '3.1')]
         )
 
 class ChildTest(TestCase):

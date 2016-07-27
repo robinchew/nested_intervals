@@ -107,7 +107,7 @@ class NestedIntervalsModelMixin(models.Model):
             # A new model instance is being created,
             # so a setting the matrix is enough.
             self.set_matrix(child_matrix)
-            return ()
+            return (self,)
 
         # self is an existing model instance which may have
         # descendants, so the instance and its descendants'
@@ -120,9 +120,10 @@ class NestedIntervalsModelMixin(models.Model):
             setattr(self, field_name, abs(num))
 
     def save_as_child_of(self, parent, *args, **kwargs):
-        self.set_as_child_of(parent)
-        self.save(*args, **kwargs)
-        return self
+        nodes = self.set_as_child_of(parent)
+        for node in nodes:
+            node.save(*args, **kwargs)
+        return nodes
 
     def set_as_root(self):
         num_children = children_of_matrix(self.__class__.objects, INVISIBLE_ROOT_MATRIX).count()
