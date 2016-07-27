@@ -4,6 +4,7 @@ from django.db.models.base import ModelBase
 from django.utils import six
 
 from nested_intervals.exceptions import NoChildrenError
+from nested_intervals.exceptions import InvalidNodeError
 from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQuerySet
 from nested_intervals.matrix import Matrix, get_child_matrix, get_ancestors_matrix, get_root_matrix
 from nested_intervals.matrix import INVISIBLE_ROOT_MATRIX
@@ -11,6 +12,7 @@ from nested_intervals.queryset import children_of
 from nested_intervals.queryset import children_of_matrix
 from nested_intervals.queryset import last_child_of
 from nested_intervals.queryset import reroot_matrix
+from nested_intervals.validation import validate_node
 
 
 class NestedIntervalsModelMixin(models.Model):
@@ -99,6 +101,18 @@ class NestedIntervalsModelMixin(models.Model):
         field_names = self._nested_intervals_field_names
         child_matrix = get_child_matrix(parent.get_matrix(), nth_child+1)
 
+        try:
+            validate_node(self)
+        except InvalidNodeError:
+            # A new model instance is being created,
+            # so a setting the matrix is enough.
+            self.set_matrix(child_matrix)
+            return ()
+
+        # self is an existing model instance which may have
+        # descendants, so the instance and its descendants'
+        # matrices must be updated, using the reroot_matrix
+        # function.
         return reroot_matrix(self, child_matrix)
 
     def set_matrix(self, matrix):
