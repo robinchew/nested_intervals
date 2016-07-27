@@ -13,4 +13,4 @@ class ExampleModel(NestedIntervalsModelMixin, models.Model):
             self.ldenominator,
             self.rdenominator)
 
-nested_intervals.register_fields(ExampleModel, 'lnumerator','rnumerator', 'ldenominator', 'rdenominator')
+nested_intervals.register_fields(ExampleModel, 'lnumerator','rnumerator', 'ldenominator', 'rdenominator', 'parent')

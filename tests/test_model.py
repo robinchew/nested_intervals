@@ -77,7 +77,7 @@ class TestModel(TestCase):
             class InvalidExampleModel(NestedIntervalsModelMixin, FakeModel):
                 conflict = models.CharField()
 
-            nested_intervals.register_fields(InvalidExampleModel, 'a11', 'conflict', 'a21', 'a22')
+            nested_intervals.register_fields(InvalidExampleModel, 'a11', 'conflict', 'a21', 'a22', 'parent')
 
         self.assertEqual(
             context.exception.message,

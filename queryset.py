@@ -22,7 +22,7 @@ def children_of(parent, queryset=None):
     if queryset is None:
         queryset = parent.__class__.objects
 
-    name11, name12, name21, name22 = parent._nested_intervals_field_names
+    name11, name12, name21, name22, parent_name = parent._nested_intervals_field_names
     parent_value11, parent_value12, parent_value21, parent_value22 = parent.get_abs_matrix()
 
     return queryset.filter(**{
@@ -31,7 +31,7 @@ def children_of(parent, queryset=None):
     })
 
 def last_child_of_matrix(queryset, parent_matrix):
-    name11, name12, name21, name22 = queryset.model._nested_intervals_field_names
+    name11, name12, name21, name22, parent_name = queryset.model._nested_intervals_field_names
     v11, v12, v21, v22 = (abs(v) for v in parent_matrix)
 
     try:
@@ -44,7 +44,7 @@ def last_child_of_matrix(queryset, parent_matrix):
 
 def last_child_of(parent):
     validate_node(parent)
-    name11, name12, name21, name22 = parent._nested_intervals_field_names
+    name11, name12, name21, name22, parent_name = parent._nested_intervals_field_names
     try:
         return children_of(parent).order_by((F(name11) * F(name12)).desc())[0]
     except IndexError:

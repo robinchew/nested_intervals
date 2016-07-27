@@ -24,7 +24,7 @@ class NestedIntervalsModelMixin(models.Model):
 
     @classmethod
     def build_nested_intervals_query_kwargs(cls, a11, a12, a21, a22):
-        name11, name12, name21, name22 = cls._nested_intervals_field_names
+        name11, name12, name21, name22, parent_name = cls._nested_intervals_field_names
         return {
             name11: abs(a11),
             name12: abs(a12),
@@ -40,7 +40,8 @@ class NestedIntervalsModelMixin(models.Model):
     def get_matrix(self):
         return Matrix(*(
             getattr(self, field_name) * (1 if (i % 2 == 0) else -1)
-            for i, field_name in enumerate(self._nested_intervals_field_names)))
+            for i, field_name in enumerate(self._nested_intervals_field_names[0:-1]))
+        )
 
     def get_abs_matrix(self):
         return Matrix(*tuple(abs(num) for num in self.get_matrix()))
@@ -51,7 +52,7 @@ class NestedIntervalsModelMixin(models.Model):
                 *get_root_matrix(self.get_matrix())))
 
     def get_parent(self):
-        name11, name12, name21, name22 = self._nested_intervals_field_names
+        name11, name12, name21, name22, parent_name = self._nested_intervals_field_names
         return self.__class__.objects.get(**{
             name11: getattr(self, name12),
             name21: getattr(self, name22)
@@ -73,7 +74,7 @@ class NestedIntervalsModelMixin(models.Model):
         return children_of(self)
 
     def get_descendants(self):
-        name11, name12, name21, name22 = self._nested_intervals_field_names
+        name11, name12, name21, name22, parent_name = self._nested_intervals_field_names
         a11, a12, a21, a22 = self.get_abs_matrix()
 
         s1 = a11 - a12 # 's' stands for sibling
@@ -87,7 +88,7 @@ class NestedIntervalsModelMixin(models.Model):
             params=[s2, s1, a21, a11])
 
     def get_nth(self):
-        n11, n12, n21, n22 = self._nested_intervals_field_names
+        n11, n12, n21, n22, parent_name = self._nested_intervals_field_names
         return int(getattr(self, n11) / getattr(self, n12))
 
     def set_matrix(self, matrix):
