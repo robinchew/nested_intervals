@@ -3,6 +3,7 @@ from django.db.models import F
 
 from nested_intervals.matrix import get_child_matrix
 from nested_intervals.exceptions import NoChildrenError
+from nested_intervals.validation import validate_node
 
 def children_of_matrix(queryset, matrix):
     name11, name12, name21, name22 = queryset.model._nested_intervals_field_names
@@ -14,6 +15,7 @@ def children_of_matrix(queryset, matrix):
     })
 
 def children_of(parent, queryset=None):
+    validate_node(parent)
     if queryset is None:
         queryset = parent.__class__.objects
 
@@ -26,6 +28,7 @@ def children_of(parent, queryset=None):
     })
 
 def last_child_of(parent):
+    validate_node(parent)
     name11, name12, name21, name22 = parent._nested_intervals_field_names
     try:
         return children_of(parent).order_by((F(name11) * F(name12)).desc())[0]
@@ -33,6 +36,7 @@ def last_child_of(parent):
         raise NoChildrenError()
 
 def reroot_matrix(node, root_matrix):
+    validate_node(node)
     children = node.get_children()
     node.set_matrix(root_matrix)
 
