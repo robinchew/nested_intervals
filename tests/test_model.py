@@ -5,6 +5,7 @@ from django.test import TestCase
 
 import nested_intervals
 from nested_intervals.matrix import Matrix
+from nested_intervals.matrix import get_child_matrix
 from nested_intervals.models import NestedIntervalsModelMixin
 from nested_intervals.tests.models import ExampleModel
 from nested_intervals.queryset import last_child_of
@@ -181,6 +182,11 @@ class TestModel(TestCase):
             [i.pk for i in tree['3'].get_descendants().order_by('pk')],
             [tree[i].pk for i in ('2', '2.1', '2.1.1', '2.2', '3.1')]
         )
+        self.assertEqual(tree['2'].get_matrix(), get_child_matrix(tree['3'].get_matrix(), 2))
+        self.assertEqual(tree['2'].get_matrix(), Matrix(8, -3, 19, -7))
+        self.assertEqual(tree['2.1'].get_matrix(), Matrix(13, -8, 31, -19))
+        self.assertEqual(tree['2.1.1'].get_matrix(), Matrix(18, -13, 43, -31))
+        self.assertEqual(tree['2.2'].get_matrix(), Matrix(21, -8, 50, -19))
 
         # Make 2.1 child of 1.1
 
@@ -190,6 +196,27 @@ class TestModel(TestCase):
             [i.pk for i in tree['3'].get_descendants().order_by('pk')],
             [tree[i].pk for i in ('2', '2.2', '3.1')]
         )
+
+        self.assertEqual(
+            [i.pk for i in tree['1.1'].get_descendants().order_by('pk')],
+            [tree[i].pk for i in ('2.1', '2.1.1')]
+        )
+
+        self.assertEqual(
+            tree['2.1'].get_matrix(),
+            get_child_matrix(tree['1.1'].get_matrix(), 1)
+        )
+        self.assertEqual(
+            tree['2.1.1'].get_matrix(),
+            get_child_matrix(tree['2.1'].get_matrix(), 1)
+        )
+        self.assertEqual(
+            tree['2.1.1'].get_matrix(),
+            Matrix(1, -1, 6, -5)
+        )
+
+        # 2.2 remains unchanged
+        self.assertEqual(tree['2.2'].get_matrix(), Matrix(21, -8, 50, -19))
 
 class ChildTest(TestCase):
     def test_save_child_repeatedly(self):
