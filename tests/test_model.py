@@ -143,9 +143,11 @@ class ChildTest(TestCase):
 
         root = ExampleModel.objects.all().get()
         self.assertEqual(root.get_abs_matrix(), Matrix(1, 1, 2, 1))
+        self.assertEqual(root.parent, None)
 
         child1 = ExampleModel()
         child1.save_as_child_of(root)
+        self.assertEqual(child1.parent, root)
 
         root, child1  = ExampleModel.objects.order_by('pk')
         self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))

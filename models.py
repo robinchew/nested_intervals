@@ -95,7 +95,15 @@ class NestedIntervalsModelMixin(models.Model):
         for field_name, num in zip(self._nested_intervals_field_names, matrix):
             setattr(self, field_name, abs(num))
 
-    def set_as_child_of_matrix(self, parent_matrix):
+    def set_parent(self, parent):
+        parent_name = self._nested_intervals_field_names[-1]
+        setattr(self, parent_name, parent)
+
+    def set_as_child_of(self, parent):
+        if parent:
+            parent_matrix = parent.get_matrix()
+        else:
+            parent_matrix = INVISIBLE_ROOT_MATRIX
         try:
             last_child = last_child_of_matrix(self.__class__.objects, parent_matrix)
         except NoChildrenError:
@@ -111,6 +119,7 @@ class NestedIntervalsModelMixin(models.Model):
             # A new model instance is being created,
             # so a setting the matrix is enough.
             self.set_matrix(child_matrix)
+            self.set_parent(parent)
             return (self,)
 
         # self is an existing model instance which may have
@@ -119,11 +128,8 @@ class NestedIntervalsModelMixin(models.Model):
         # function.
         return reroot_matrix(self, child_matrix)
 
-    def set_as_child_of(self, parent):
-        return self.set_as_child_of_matrix(parent.get_matrix())
-
     def set_as_root(self):
-        return self.set_as_child_of_matrix(INVISIBLE_ROOT_MATRIX)
+        return self.set_as_child_of(None)
 
     def save_as_child_of(self, parent, *args, **kwargs):
         nodes = self.set_as_child_of(parent)
