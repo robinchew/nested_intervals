@@ -184,6 +184,10 @@ class ChildTest(TestCase):
             list(tree['2'].get_descendants().order_by('pk')),
             [tree[i] for i in ('2.1', '2.1.1', '2.2')])
 
+        self.assertEqual(
+            [node.parent for node in tree['2'].get_descendants().order_by('pk')],
+            [tree[i] for i in ('2', '2.1', '2')])
+
     def test_move_child_to_new_parent_along_with_descendants(self):
         tree = create_test_tree()
 
@@ -202,6 +206,11 @@ class ChildTest(TestCase):
         self.assertEqual(
             [i.pk for i in tree['2'].get_descendants().order_by('pk')],
             [tree[i].pk for i in ('2.1', '2.1.1', '2.2')]
+        )
+        self.assertEqual(tree['2'].parent, tree['3'])
+        self.assertEqual(
+            [i.parent for i in tree['2'].get_descendants().order_by('pk')],
+            [tree[i] for i in ('2', '2.1', '2')]
         )
 
         self.assertEqual(
@@ -226,6 +235,11 @@ class ChildTest(TestCase):
         self.assertEqual(
             [i.pk for i in tree['1.1'].get_descendants().order_by('pk')],
             [tree[i].pk for i in ('2.1', '2.1.1')]
+        )
+        self.assertEqual(tree['2.1'].parent, tree['1.1'])
+        self.assertEqual(
+            [i.parent for i in tree['1.1'].get_descendants().order_by('pk')],
+            [tree[i] for i in ('1.1', '2.1')]
         )
 
         self.assertEqual(

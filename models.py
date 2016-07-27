@@ -13,7 +13,7 @@ from nested_intervals.queryset import children_of
 from nested_intervals.queryset import children_of_matrix
 from nested_intervals.queryset import last_child_of
 from nested_intervals.queryset import last_child_of_matrix
-from nested_intervals.queryset import reroot_matrix
+from nested_intervals.queryset import reroot
 
 from nested_intervals.validation import validate_node
 
@@ -124,9 +124,8 @@ class NestedIntervalsModelMixin(models.Model):
 
         # self is an existing model instance which may have
         # descendants, so the instance and its descendants'
-        # matrices must be updated, using the reroot_matrix
-        # function.
-        return reroot_matrix(self, child_matrix)
+        # matrices must be updated, using the reroot function.
+        return reroot(self, parent, child_matrix)
 
     def set_as_root(self):
         return self.set_as_child_of(None)

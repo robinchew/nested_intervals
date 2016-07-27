@@ -50,17 +50,22 @@ def last_child_of(parent):
     except IndexError:
         raise NoChildrenError()
 
-def reroot_matrix(node, root_matrix):
+def reroot(node, parent, child_matrix):
     validate_node(node)
+    validate_node(parent)
+    parent_matrix = parent.get_matrix()
     children = node.get_children()
-    node.set_matrix(root_matrix)
+
+    node.set_matrix(child_matrix)
+    node.set_parent(parent)
 
     descendants = functools.reduce(
         operator.add,
         (
-            reroot_matrix(
+            reroot(
                 child,
-                get_child_matrix(root_matrix, i+1)
+                node,
+                get_child_matrix(child_matrix, i+1)
             )
             for i, child in enumerate(children)
         ),
