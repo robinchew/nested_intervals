@@ -90,6 +90,10 @@ class NestedIntervalsModelMixin(models.Model):
         n11, n12, n21, n22 = self._nested_intervals_field_names
         return int(getattr(self, n11) / getattr(self, n12))
 
+    def set_matrix(self, matrix):
+        for field_name, num in zip(self._nested_intervals_field_names, matrix):
+            setattr(self, field_name, abs(num))
+
     def set_as_child_of_matrix(self, parent_matrix):
         try:
             last_child = last_child_of_matrix(self.__class__.objects, parent_matrix)
@@ -117,18 +121,14 @@ class NestedIntervalsModelMixin(models.Model):
     def set_as_child_of(self, parent):
         return self.set_as_child_of_matrix(parent.get_matrix())
 
-    def set_matrix(self, matrix):
-        for field_name, num in zip(self._nested_intervals_field_names, matrix):
-            setattr(self, field_name, abs(num))
+    def set_as_root(self):
+        return self.set_as_child_of_matrix(INVISIBLE_ROOT_MATRIX)
 
     def save_as_child_of(self, parent, *args, **kwargs):
         nodes = self.set_as_child_of(parent)
         for node in nodes:
             node.save(*args, **kwargs)
         return nodes
-
-    def set_as_root(self):
-        return self.set_as_child_of_matrix(INVISIBLE_ROOT_MATRIX)
 
     def save_as_root(self, *args, **kwargs):
         self.set_as_root()
