@@ -135,6 +135,28 @@ class TestModel(TestCase):
             context.exception.message,
             "'conflict' is already an existing model field.")
 
+    def create_root(self):
+        root1 = ExampleModel()
+        root1.save_as_root()
+        return root1
+
+    def test_root_save(self):
+        root = self.create_root()
+        root.save()
+        self.assertEqual(root.get_matrix(), Matrix(1, -1, 2, -1))
+
+    def test_root_save_after_mutation(self):
+        root = self.create_root()
+        root.set_matrix(Matrix(9999, 9999, 9999, 9999))
+        root.save()
+
+        self.assertEqual(root.get_matrix(), Matrix(1, -1, 2, -1))
+
+    def test_child_mutation_before_save(self):
+        root = self.create_root()
+        child = ExampleModel()
+        child.save_as_child_of(root)
+
 
 class ChildTest(TestCase):
     def test_save_children(self):
