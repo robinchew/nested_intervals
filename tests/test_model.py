@@ -7,6 +7,8 @@ import nested_intervals
 from nested_intervals.matrix import Matrix
 from nested_intervals.matrix import get_child_matrix
 from nested_intervals.models import NestedIntervalsModelMixin
+from nested_intervals.models import create
+from nested_intervals.models import update
 from nested_intervals.tests.models import ExampleModel
 from nested_intervals.queryset import last_child_of
 
@@ -134,6 +136,17 @@ class TestModel(TestCase):
         self.assertEqual(
             context.exception.message,
             "'conflict' is already an existing model field.")
+
+    def test_create(self):
+        self.assertEqual(ExampleModel.objects.count(), 0)
+        create(ExampleModel, [
+            {'name': 'example1',},
+            {'name': 'example2',},
+        ])
+        self.assertEqual(
+            [e.name for e in ExampleModel.objects.order_by('pk')],
+            ['example1', 'example2'],
+        )
 
     def create_root(self):
         root1 = ExampleModel()

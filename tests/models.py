@@ -6,6 +6,8 @@ from nested_intervals.models import NestedIntervalsModelMixin
 
 
 class ExampleModel(NestedIntervalsModelMixin, models.Model):
+    name = models.CharField(max_length=10)
+
     def __unicode__(self):
         return u'{} {} {} {}'.format(
             self.lnumerator,
