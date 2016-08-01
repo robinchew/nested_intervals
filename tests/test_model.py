@@ -150,22 +150,19 @@ class TestModel(TestCase):
 
 class ChildTest(TestCase):
     def test_save_children(self):
-        root = ExampleModel()
-        root.save_as_root()
-
+        root = create(ExampleModel, [{'name': 'Root'}])
         root = ExampleModel.objects.all().get()
+
         self.assertEqual(root.get_abs_matrix(), Matrix(1, 1, 2, 1))
         self.assertEqual(root.parent, None)
 
-        child1 = ExampleModel()
-        child1.save_as_child_of(root)
-        self.assertEqual(child1.parent, root)
-
+        create(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}])
         root, child1  = ExampleModel.objects.order_by('pk')
+
+        self.assertEqual(child1.parent, root)
         self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))
 
-        child2 = ExampleModel()
-        child2.save_as_child_of(root)
+        create(ExampleModel, [{'name': 'Child 2' ,'parent': root.pk}])
 
         root, child1, child2 = ExampleModel.objects.order_by('pk')
         self.assertEqual(child2.get_abs_matrix(), Matrix(2, 1, 5, 2))

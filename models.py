@@ -167,7 +167,7 @@ def validate_multi_column_values(d_list):
 def clean(Model, d, i):
     parent_name = Model._nested_intervals_field_names[-1]
     if parent_name in d:
-        parent = Model.objects.get(**{parent_name: d[parent_name]})
+        parent = Model.objects.get(pk=d[parent_name])
         parent_matrix = parent.get_matrix()
     else:
         parent_matrix = INVISIBLE_ROOT_MATRIX
@@ -177,13 +177,21 @@ def clean(Model, d, i):
         Model.last_child_nth_of(parent_matrix) + i + 1
     )
 
-    return ChainMap(
-        {
-            name: value
-            for name, value in izip(Model._nested_intervals_field_names[0:-1], imap(abs, child_matrix))
-        },
-        d
-    )
+    def clean_field_name(name):
+        if type(Model._meta.get_field(name)) == models.ForeignKey:
+            return name+'_id'
+        return name
+
+    return {
+        clean_field_name(name): value
+        for name, value in ChainMap(
+            {
+                name: value
+                for name, value in izip(Model._nested_intervals_field_names[0:-1], imap(abs, child_matrix))
+            },
+            d
+        ).items()
+    }
 
 def multi_clean(Model, l):
     return [clean(Model, d, i) for i, d in enumerate(l)]
