@@ -164,7 +164,7 @@ def validate_multi_column_values(d_list):
         if len(remaining_keys):
             raise Exception('All column values must have matching keys. These keys are mismatched: {}.'.format(', '.join(remaining_keys)))
 
-def clean(Model, d):
+def clean(Model, d, i):
     parent_name = Model._nested_intervals_field_names[-1]
     if parent_name in d:
         parent = Model.objects.get(**{parent_name: d[parent_name]})
@@ -174,7 +174,7 @@ def clean(Model, d):
 
     child_matrix = get_child_matrix(
         parent_matrix,
-        Model.last_child_nth_of(parent_matrix) + 1
+        Model.last_child_nth_of(parent_matrix) + i + 1
     )
 
     return ChainMap(
@@ -186,7 +186,7 @@ def clean(Model, d):
     )
 
 def multi_clean(Model, l):
-    return [clean(Model, d) for d in l]
+    return [clean(Model, d, i) for i, d in enumerate(l)]
 
 def create(Model, multi_column_values):
     table = Table(Model._meta.db_table)

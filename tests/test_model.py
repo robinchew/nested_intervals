@@ -77,8 +77,7 @@ class RootTest(TestCase):
     def test_save_two_roots(self):
         self.assertEqual(ExampleModel.objects.count(), 0)
 
-        model = ExampleModel()
-        model.save_as_root()
+        create(ExampleModel, [{'name': 'example1'}])
 
         model = ExampleModel.objects.all().get()
 
@@ -87,8 +86,7 @@ class RootTest(TestCase):
         self.assertEqual(model.ldenominator, 2)
         self.assertEqual(model.rdenominator, 1)
 
-        model = ExampleModel()
-        model.save_as_root()
+        create(ExampleModel, [{'name': 'example2'}])
 
         model1, model2 = ExampleModel.objects.order_by('pk')
 
@@ -105,14 +103,8 @@ class RootTest(TestCase):
             tree['0'])
 
     def test_save_root_after_deleting_old_root(self):
-        root1 = ExampleModel()
-        root1.save_as_root()
-
-        root2 = ExampleModel()
-        root2.save_as_root()
-
-        root3 = ExampleModel()
-        root3.save_as_root()
+        create(ExampleModel, [{'name': 'example {}'.format(i+1)} for i in xrange(3)])
+        root1, root2, root3 = ExampleModel.objects.order_by('pk')
 
         self.assertEqual(root1.get_matrix(), Matrix(1, -1, 2, -1))
         self.assertEqual(root2.get_matrix(), Matrix(2, -1, 3, -1))
@@ -120,8 +112,10 @@ class RootTest(TestCase):
 
         root2.delete()
 
-        root4 = ExampleModel()
-        root4.save_as_root()
+        create(ExampleModel, [{'name': 'example 4'}])
+        root1, root3, root4 = ExampleModel.objects.order_by('pk')
+        self.assertEqual(root1.get_matrix(), Matrix(1, -1, 2, -1))
+        self.assertEqual(root3.get_matrix(), Matrix(3, -1, 4, -1))
         self.assertEqual(root4.get_matrix(), Matrix(4, -1, 5, -1))
 
 
@@ -148,14 +142,9 @@ class TestModel(TestCase):
             ['example1', 'example2'],
         )
 
-    def create_root(self):
-        root1 = ExampleModel()
-        root1.save_as_root()
-        return root1
-
     def test_root_save(self):
-        root = self.create_root()
-        root.save()
+        root = create(ExampleModel, [{'name': 'example 1'}])
+        root = ExampleModel.objects.all().get()
         self.assertEqual(root.get_matrix(), Matrix(1, -1, 2, -1))
 
 
