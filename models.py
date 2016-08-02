@@ -164,7 +164,7 @@ def validate_multi_column_values(d_list):
         if len(remaining_keys):
             raise Exception('All column values must have matching keys. These keys are mismatched: {}.'.format(', '.join(remaining_keys)))
 
-def clean(Model, d, i):
+def clean(Model, d, i=0):
     parent_name = Model._nested_intervals_field_names[-1]
     if parent_name in d:
         parent = Model.objects.get(pk=d[parent_name])
@@ -222,14 +222,20 @@ def create(Model, multi_column_values):
     ))
 
 def update(Model, pk_column_value, column_values):
-    assert len(pk_column_value) == 1
+    assert len(pk_column_value) == 2
     pk_key, pk_value = pk_column_value
     table = Table(Model._meta.db_table)
 
-    cvalues1, cvalues2  = tee(column_values)
+    cvalues1, cvalues2  = tee(clean(Model, column_values).items())
 
-    table.update(
-        columns=[column for column, value in cvalues1],
+    table_columns = [
+        getattr(table, column)
+        for column, value in cvalues1
+    ]
+
+    cursor = connection.cursor()
+    cursor.execute(*table.update(
+        columns=table_columns,
         values=[value for column, value in cvalues2],
         where=getattr(table, pk_key) == pk_value
-    )
+    ))

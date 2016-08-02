@@ -272,15 +272,17 @@ class ChildTest(TestCase):
         Saving the same child to the same parent will
         make the child younger and younger.
         """
-        root = ExampleModel()
-        root.save_as_root()
+        create(ExampleModel, [{'name': 'Root'}])
+        root = ExampleModel.objects.all().get()
 
-        child1 = ExampleModel()
-        child1.save_as_child_of(root)
+        create(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}])
+        root, child1 = ExampleModel.objects.all().order_by('pk')
 
         self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))
 
-        child1.save_as_child_of(root)
+        update(ExampleModel, ('id', child1.pk), {'parent': root.pk})
+
+        root, child1 = ExampleModel.objects.all().order_by('pk')
         self.assertEqual(child1.get_abs_matrix(), Matrix(2, 1, 5, 2))
 
     def test_set_child_after_deleting_sibling(self):
