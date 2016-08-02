@@ -286,15 +286,17 @@ class ChildTest(TestCase):
         self.assertEqual(child1.get_abs_matrix(), Matrix(2, 1, 5, 2))
 
     def test_set_child_after_deleting_sibling(self):
-        root = ExampleModel()
-        root.save_as_root() # 1 1 2 1
+        create(ExampleModel, [{'name': 'Root'}]) # 1 1 2 1
+        root = ExampleModel.objects.all().get()
 
-        child1 = ExampleModel() # 1 1 3 2
-        child1.save_as_child_of(root)
-        child2 = ExampleModel() # 2 1 5 2
-        child2.save_as_child_of(root)
-        child3 = ExampleModel() # 3 1 7 2
-        child3.save_as_child_of(root)
+        create(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}]) # 1 1 3 2
+        root, child1 = ExampleModel.objects.order_by('pk')
+
+        create(ExampleModel, [{'name': 'Child 2', 'parent': root.pk}]) # 2 1 5 2
+        root, child1, child2 = ExampleModel.objects.order_by('pk')
+
+        create(ExampleModel, [{'name': 'Child 3', 'parent': root.pk}]) # 3 1 7 2
+        root, child1, child2, child3 = ExampleModel.objects.order_by('pk')
 
         self.assertEqual(root.get_abs_matrix(), Matrix(1, 1, 2, 1))
         self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))
@@ -305,6 +307,8 @@ class ChildTest(TestCase):
 
         self.assertEqual(last_child_of(root), child3)
 
-        child4 = ExampleModel() # 4 1 9 2
-        child4.save_as_child_of(root)
+        create(ExampleModel, [{'name': 'Child 4', 'parent': root.pk}]) # 4 1 9 2
+
+        root, child1, child3, child4 = ExampleModel.objects.order_by('pk')
+        self.assertEqual(child3.name, 'Child 3')
         self.assertEqual(child4.get_abs_matrix(), Matrix(4, 1, 9, 2))
