@@ -208,8 +208,9 @@ class ChildTest(TestCase):
 
         # Make 2 child of 3
 
-        for child in tree['2'].set_as_child_of(tree['3']):
-            child.save()
+        update(ExampleModel, ('id', tree['2'].pk), {
+            'parent': tree['3'].pk,
+        })
 
         self.assertEqual(tree['2'].get_parent(), tree['3'])
         self.assertEqual(
@@ -234,7 +235,7 @@ class ChildTest(TestCase):
 
         # Make 2.1 child of 1.1
 
-        tree['2.1'].save_as_child_of(tree['1.1'])
+        update(ExampleModel, ('id', tree['2.1'].pk), {'parent': tree['1.1'].pk})
 
         self.assertEqual(
             [i.pk for i in tree['3'].get_descendants().order_by('pk')],

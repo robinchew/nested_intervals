@@ -165,6 +165,11 @@ def validate_multi_column_values(d_list):
             raise Exception('All column values must have matching keys. These keys are mismatched: {}.'.format(', '.join(remaining_keys)))
 
 def clean(Model, d, i=0):
+    def clean_field_name(name):
+        if type(Model._meta.get_field(name)) == models.ForeignKey:
+            return name+'_id'
+        return name
+
     parent_name = Model._nested_intervals_field_names[-1]
     if parent_name in d:
         parent = Model.objects.get(pk=d[parent_name])
@@ -176,11 +181,6 @@ def clean(Model, d, i=0):
         parent_matrix,
         Model.last_child_nth_of(parent_matrix) + i + 1
     )
-
-    def clean_field_name(name):
-        if type(Model._meta.get_field(name)) == models.ForeignKey:
-            return name+'_id'
-        return name
 
     return {
         clean_field_name(name): value
@@ -239,3 +239,14 @@ def update(Model, pk_column_value, column_values):
         values=[value for column, value in cvalues2],
         where=getattr(table, pk_key) == pk_value
     ))
+
+    parent_name = Model._nested_intervals_field_names[-1]
+    children = Model.objects.filter(parent=pk_value).iterator()
+
+    # Updating a node's parent should result in
+    # updating of the node's descendants.
+
+    for child in children:
+        update(Model, (pk_key, child.pk), {
+            'parent': pk_value,
+        })
