@@ -200,26 +200,11 @@ def create(Model, multi_column_values):
     table = Table(Model._meta.db_table)
     validate_multi_column_values(multi_column_values)
 
-    clean_multi_column_values = multi_clean(Model, multi_column_values)
-
-    column_names = clean_multi_column_values[0].keys()
-
-    table_columns = [
-        getattr(table, key)
-        for key in column_names
-    ]
-
-    cursor = connection.cursor()
-    cursor.execute(*table.insert(
-        columns=table_columns,
-        values=[
-            [
-                column_values[column]
-                for column in column_names
-            ]
-            for column_values in clean_multi_column_values
-        ]
-    ))
+    for fields in multi_clean(Model, multi_column_values):
+        instance = Model()
+        for field, value in fields.iteritems():
+            setattr(instance, field, value)
+        instance.save()
 
 def update(Model, pk_column_value, column_values):
     assert len(pk_column_value) == 2
