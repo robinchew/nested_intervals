@@ -42,11 +42,6 @@ class NestedIntervalsModelMixin(models.Model):
             name22: abs(a22),
         }
 
-    def has_matrix(self):
-        return any(
-            getattr(self, field_name)
-            for field_name in self._nested_intervals_field_names)
-
     def get_matrix(self):
         return Matrix(*(
             getattr(self, field_name) * (1 if (i % 2 == 0) else -1)
