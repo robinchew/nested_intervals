@@ -97,7 +97,11 @@ class NestedIntervalsModelMixin(models.Model):
             ],
             params=[s2, s1, a21, a11])
 
-    def get_family_tree(self):
+    def get_family_line(self):
+        """
+        This includes self, ancestors, and descendants.
+        This EXCLUDES siblings and cousins.
+        """
         return self.get_ancestors() | self.get_descendants() | self.__class__.objects.filter(pk=self.pk)
 
     def get_nth(self):

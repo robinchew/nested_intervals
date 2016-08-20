@@ -32,27 +32,27 @@ class Tree(dict):
 
 
 def create_test_tree():
-    root = ExampleModel()
+    root = ExampleModel(name='0')
     root.save_as_root() # 1 1 2 1
-    child_1 = ExampleModel() # 1 1 3 2
+    child_1 = ExampleModel(name='1') # 1 1 3 2
     child_1.save_as_child_of(root)
-    child_1_1 = ExampleModel() # 1 1 4 3
+    child_1_1 = ExampleModel(name='1.1') # 1 1 4 3
     child_1_1.save_as_child_of(child_1)
-    child_1_2 = ExampleModel() # 2 1 7 3
+    child_1_2 = ExampleModel(name='1.2') # 2 1 7 3
     child_1_2.save_as_child_of(child_1)
 
-    child_2 = ExampleModel() # 2 1 5 2
+    child_2 = ExampleModel(name='2') # 2 1 5 2
     child_2.save_as_child_of(root)
-    child_2_1 = ExampleModel() # 3 2 8 5
+    child_2_1 = ExampleModel(name='2.1') # 3 2 8 5
     child_2_1.save_as_child_of(child_2)
-    child_2_1_1 = ExampleModel() # 4 3 11 8
+    child_2_1_1 = ExampleModel(name='2.1.1') # 4 3 11 8
     child_2_1_1.save_as_child_of(child_2_1)
-    child_2_2 = ExampleModel() # 5 2 13 5
+    child_2_2 = ExampleModel(name='2.2') # 5 2 13 5
     child_2_2.save_as_child_of(child_2)
 
-    child_3 = ExampleModel() # 3 1 7 2
+    child_3 = ExampleModel(name='3') # 3 1 7 2
     child_3.save_as_child_of(root)
-    child_3_1 = ExampleModel() # 5 3 12 7
+    child_3_1 = ExampleModel(name='3.1') # 5 3 12 7
     child_3_1.save_as_child_of(child_3)
 
     return Tree({
@@ -157,6 +157,14 @@ class TestModel(TestCase):
         root = create(ExampleModel, [{'name': 'example 1'}])
         root = ExampleModel.objects.all().get()
         self.assertEqual(root.get_matrix(), Matrix(1, -1, 2, -1))
+
+    def test_model_family_line(self):
+        tree = create_test_tree()
+
+        self.assertEqual(
+            list(node.pk for node in tree['2.1'].get_family_line().order_by('pk')),
+            [tree[i].pk for i in ('0', '2', '2.1', '2.1.1')]
+        )
 
 
 class ChildTest(TestCase):
