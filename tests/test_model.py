@@ -118,6 +118,17 @@ class RootTest(TestCase):
         self.assertEqual(root3.get_matrix(), Matrix(3, -1, 4, -1))
         self.assertEqual(root4.get_matrix(), Matrix(4, -1, 5, -1))
 
+    def test_save_child_as_new_root(self):
+        tree = create_test_tree()
+
+        self.assertEqual(tree['2.1'].get_matrix(), Matrix(3, -2, 8, -5))
+        self.assertEqual(tree['2.1.1'].get_matrix(), Matrix(4, -3, 11, -8))
+
+        update(ExampleModel, ('id', tree['2.1'].pk), {'parent': None})
+
+        self.assertEqual(tree['2.1'].get_matrix(), Matrix(2, -1, 3, -1))
+        self.assertEqual(tree['2.1.1'].get_matrix(), Matrix(3, -2, 5, -3))
+
 
 class TestModel(TestCase):
     def test_invalid_model(self):

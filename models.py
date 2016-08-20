@@ -171,8 +171,10 @@ def clean(Model, d, i=0):
         return name
 
     parent_name = Model._nested_intervals_field_names[-1]
-    if parent_name in d:
-        parent = Model.objects.get(pk=d[parent_name])
+    parent_id = d.get(parent_name, None)
+
+    if parent_id:
+        parent = Model.objects.get(pk=parent_id)
         parent_matrix = parent.get_matrix()
     else:
         parent_matrix = INVISIBLE_ROOT_MATRIX
