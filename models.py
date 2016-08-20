@@ -97,6 +97,9 @@ class NestedIntervalsModelMixin(models.Model):
             ],
             params=[s2, s1, a21, a11])
 
+    def get_family_tree(self):
+        return self.get_ancestors() | self.get_descendants() | self.__class__.objects.filter(pk=self.pk)
+
     def get_nth(self):
         n11, n12, n21, n22, parent_name = self._nested_intervals_field_names
         return int(getattr(self, n11) / getattr(self, n12))
