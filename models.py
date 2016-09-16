@@ -229,12 +229,13 @@ def update(Model, pk_column_value, column_values, clean=clean_default):
         for column, value in cvalues1
     ]
 
-    cursor = connection.cursor()
-    cursor.execute(*table.update(
-        columns=table_columns,
-        values=[value for column, value in cvalues2],
-        where=getattr(table, pk_key) == pk_value
-    ))
+    with connection.cursor() as cursor:
+        cursor.execute(*table.update(
+            columns=table_columns,
+            values=[value for column, value in cvalues2],
+            where=getattr(table, pk_key) == pk_value
+        ))
+        assert cursor.rowcount == 1, 'SQL Update Failed'
 
 @transaction.atomic
 def update_with_nested_intervals(Model, pk_column_value, column_values, clean=clean_nested_intervals):
