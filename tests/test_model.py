@@ -86,6 +86,18 @@ class ModelCreateUpdateTest(TestCase):
         first, second = ExampleModelWithoutNestedIntervals.objects.order_by('pk')
         self.assertEqual([first.name, second.name], ['First', 'Second'])
 
+    def test_update(self):
+        self.test_create()
+        first, second = ExampleModelWithoutNestedIntervals.objects.order_by('pk')
+
+        update(ExampleModelWithoutNestedIntervals,
+            ('id', second.pk),
+            {'name': 'Second2'},
+        )
+
+        first, second = ExampleModelWithoutNestedIntervals.objects.order_by('pk')
+        self.assertEqual([first.name, second.name], ['First', 'Second2'])
+
 
 class RootTest(TestCase):
     def test_save_two_roots(self):
