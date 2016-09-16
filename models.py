@@ -1,5 +1,6 @@
 from django.db import connection
 from django.db import models
+from django.db import transaction
 from django.db.models import Q
 from django.db.models.base import ModelBase
 from django.utils import six
@@ -210,7 +211,7 @@ def create_with_nested_intervals(Model, multi_column_values):
             setattr(instance, field, value)
         instance.save()
 
-def update_with_nested_intervals(Model, pk_column_value, column_values):
+def update(Model, pk_column_value, column_values):
     assert len(pk_column_value) == 2
     pk_key, pk_value = pk_column_value
     table = Table(Model._meta.db_table)
@@ -229,6 +230,11 @@ def update_with_nested_intervals(Model, pk_column_value, column_values):
         where=getattr(table, pk_key) == pk_value
     ))
 
+@transaction.atomic
+def update_with_nested_intervals(Model, pk_column_value, column_values):
+    update(Model, pk_column_value, column_values)
+
+    pk_key, pk_value = pk_column_value
     parent_name = Model._nested_intervals_field_names[-1]
     children = Model.objects.filter(parent=pk_value).iterator()
 
