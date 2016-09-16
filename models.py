@@ -198,20 +198,17 @@ def clean(Model, d, i=0):
         ).iteritems()
     }
 
-def multi_clean(Model, l):
-    return [clean(Model, d, i) for i, d in enumerate(l)]
-
-def create_with_nested_intervals(Model, multi_column_values):
+def create_with_nested_intervals(Model, multi_column_values, clean=clean):
     table = Table(Model._meta.db_table)
     validate_multi_column_values(multi_column_values)
 
-    for fields in multi_clean(Model, multi_column_values):
+    for fields in [clean(Model, d, i) for i, d in enumerate(multi_column_values)]:
         instance = Model()
         for field, value in fields.iteritems():
             setattr(instance, field, value)
         instance.save()
 
-def update(Model, pk_column_value, column_values):
+def update(Model, pk_column_value, column_values, clean=clean):
     assert len(pk_column_value) == 2
     pk_key, pk_value = pk_column_value
     table = Table(Model._meta.db_table)
@@ -231,8 +228,8 @@ def update(Model, pk_column_value, column_values):
     ))
 
 @transaction.atomic
-def update_with_nested_intervals(Model, pk_column_value, column_values):
-    update(Model, pk_column_value, column_values)
+def update_with_nested_intervals(Model, pk_column_value, column_values, clean=clean):
+    update(Model, pk_column_value, column_values, clean)
 
     pk_key, pk_value = pk_column_value
     parent_name = Model._nested_intervals_field_names[-1]
