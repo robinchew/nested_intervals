@@ -167,12 +167,12 @@ def validate_multi_column_values(d_list):
         if len(remaining_keys):
             raise Exception('All column values must have matching keys. These keys are mismatched: {}.'.format(', '.join(remaining_keys)))
 
-def clean(Model, d, i=0):
-    def clean_field_name(name):
-        if type(Model._meta.get_field(name)) == models.ForeignKey:
-            return name+'_id'
-        return name
+def clean_field_name(Model, name):
+    if type(Model._meta.get_field(name)) == models.ForeignKey:
+        return name+'_id'
+    return name
 
+def clean_nested_intervals(Model, d, i=0):
     parent_name = Model._nested_intervals_field_names[-1]
     parent_id = d.get(parent_name, None)
 
@@ -188,7 +188,7 @@ def clean(Model, d, i=0):
     )
 
     return {
-        clean_field_name(name): value
+        clean_field_name(Model, name): value
         for name, value in ChainMap(
             {
                 name: value
@@ -198,7 +198,13 @@ def clean(Model, d, i=0):
         ).iteritems()
     }
 
-def create_with_nested_intervals(Model, multi_column_values, clean=clean):
+def clean_default(Model, d, i=0):
+    return {
+        clean_field_name(Model, name): value
+        for name, value in d.iteritems()
+    }
+
+def create_with_nested_intervals(Model, multi_column_values, clean=clean_nested_intervals):
     table = Table(Model._meta.db_table)
     validate_multi_column_values(multi_column_values)
 
@@ -208,7 +214,7 @@ def create_with_nested_intervals(Model, multi_column_values, clean=clean):
             setattr(instance, field, value)
         instance.save()
 
-def update(Model, pk_column_value, column_values, clean=clean):
+def update(Model, pk_column_value, column_values, clean=clean_default):
     assert len(pk_column_value) == 2
     pk_key, pk_value = pk_column_value
     table = Table(Model._meta.db_table)
@@ -228,7 +234,7 @@ def update(Model, pk_column_value, column_values, clean=clean):
     ))
 
 @transaction.atomic
-def update_with_nested_intervals(Model, pk_column_value, column_values, clean=clean):
+def update_with_nested_intervals(Model, pk_column_value, column_values, clean=clean_nested_intervals):
     update(Model, pk_column_value, column_values, clean)
 
     pk_key, pk_value = pk_column_value
