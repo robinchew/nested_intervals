@@ -7,9 +7,12 @@ import nested_intervals
 from nested_intervals.matrix import Matrix
 from nested_intervals.matrix import get_child_matrix
 from nested_intervals.models import NestedIntervalsModelMixin
+from nested_intervals.models import create
+from nested_intervals.models import update
 from nested_intervals.models import create_with_nested_intervals
 from nested_intervals.models import update_with_nested_intervals
 from nested_intervals.tests.models import ExampleModel
+from nested_intervals.tests.models import ExampleModelWithoutNestedIntervals
 from nested_intervals.queryset import last_child_of
 
 
@@ -71,6 +74,17 @@ def create_test_tree():
 
 class FakeModel(object):
     pass
+
+
+class ModelCreateUpdateTest(TestCase):
+    def test_create(self):
+        self.assertEqual(ExampleModelWithoutNestedIntervals.objects.count(), 0)
+        create(ExampleModelWithoutNestedIntervals, (
+            {'name': 'First'},
+            {'name': 'Second'}
+        ))
+        first, second = ExampleModelWithoutNestedIntervals.objects.order_by('pk')
+        self.assertEqual([first.name, second.name], ['First', 'Second'])
 
 
 class RootTest(TestCase):

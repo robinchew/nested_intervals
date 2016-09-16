@@ -16,3 +16,7 @@ class ExampleModel(NestedIntervalsModelMixin, models.Model):
             self.rdenominator)
 
 nested_intervals.register_fields(ExampleModel, 'lnumerator','rnumerator', 'ldenominator', 'rdenominator', 'parent')
+
+
+class ExampleModelWithoutNestedIntervals(models.Model):
+    name = models.CharField(max_length=10)

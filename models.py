@@ -205,6 +205,9 @@ def clean_default(Model, d, i=0):
     }
 
 def create_with_nested_intervals(Model, multi_column_values, clean=clean_nested_intervals):
+    create(Model, multi_column_values, clean)
+
+def create(Model, multi_column_values, clean=clean_default):
     table = Table(Model._meta.db_table)
     validate_multi_column_values(multi_column_values)
 
