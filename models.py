@@ -216,6 +216,7 @@ def create(Model, multi_column_values, clean=clean_default):
         for field, value in fields.iteritems():
             setattr(instance, field, value)
         instance.save()
+    return instance.pk
 
 def update(Model, pk_column_value, column_values, clean=clean_default):
     assert len(pk_column_value) == 2
