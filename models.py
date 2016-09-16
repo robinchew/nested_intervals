@@ -200,7 +200,7 @@ def clean(Model, d, i=0):
 def multi_clean(Model, l):
     return [clean(Model, d, i) for i, d in enumerate(l)]
 
-def create(Model, multi_column_values):
+def create_with_nested_intervals(Model, multi_column_values):
     table = Table(Model._meta.db_table)
     validate_multi_column_values(multi_column_values)
 
@@ -210,7 +210,7 @@ def create(Model, multi_column_values):
             setattr(instance, field, value)
         instance.save()
 
-def update(Model, pk_column_value, column_values):
+def update_with_nested_intervals(Model, pk_column_value, column_values):
     assert len(pk_column_value) == 2
     pk_key, pk_value = pk_column_value
     table = Table(Model._meta.db_table)
@@ -236,6 +236,6 @@ def update(Model, pk_column_value, column_values):
     # updating of the node's descendants.
 
     for child in children:
-        update(Model, (pk_key, child.pk), {
+        update_with_nested_intervals(Model, (pk_key, child.pk), {
             'parent': pk_value,
         })

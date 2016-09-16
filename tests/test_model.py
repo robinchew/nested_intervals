@@ -7,8 +7,8 @@ import nested_intervals
 from nested_intervals.matrix import Matrix
 from nested_intervals.matrix import get_child_matrix
 from nested_intervals.models import NestedIntervalsModelMixin
-from nested_intervals.models import create
-from nested_intervals.models import update
+from nested_intervals.models import create_with_nested_intervals
+from nested_intervals.models import update_with_nested_intervals
 from nested_intervals.tests.models import ExampleModel
 from nested_intervals.queryset import last_child_of
 
@@ -77,7 +77,7 @@ class RootTest(TestCase):
     def test_save_two_roots(self):
         self.assertEqual(ExampleModel.objects.count(), 0)
 
-        create(ExampleModel, [{'name': 'example1'}])
+        create_with_nested_intervals(ExampleModel, [{'name': 'example1'}])
 
         model = ExampleModel.objects.all().get()
 
@@ -86,7 +86,7 @@ class RootTest(TestCase):
         self.assertEqual(model.ldenominator, 2)
         self.assertEqual(model.rdenominator, 1)
 
-        create(ExampleModel, [{'name': 'example2'}])
+        create_with_nested_intervals(ExampleModel, [{'name': 'example2'}])
 
         model1, model2 = ExampleModel.objects.order_by('pk')
 
@@ -103,7 +103,7 @@ class RootTest(TestCase):
             tree['0'])
 
     def test_save_root_after_deleting_old_root(self):
-        create(ExampleModel, [{'name': 'example {}'.format(i+1)} for i in xrange(3)])
+        create_with_nested_intervals(ExampleModel, [{'name': 'example {}'.format(i+1)} for i in xrange(3)])
         root1, root2, root3 = ExampleModel.objects.order_by('pk')
 
         self.assertEqual(root1.get_matrix(), Matrix(1, -1, 2, -1))
@@ -112,7 +112,7 @@ class RootTest(TestCase):
 
         root2.delete()
 
-        create(ExampleModel, [{'name': 'example 4'}])
+        create_with_nested_intervals(ExampleModel, [{'name': 'example 4'}])
         root1, root3, root4 = ExampleModel.objects.order_by('pk')
         self.assertEqual(root1.get_matrix(), Matrix(1, -1, 2, -1))
         self.assertEqual(root3.get_matrix(), Matrix(3, -1, 4, -1))
@@ -124,7 +124,7 @@ class RootTest(TestCase):
         self.assertEqual(tree['2.1'].get_matrix(), Matrix(3, -2, 8, -5))
         self.assertEqual(tree['2.1.1'].get_matrix(), Matrix(4, -3, 11, -8))
 
-        update(ExampleModel, ('id', tree['2.1'].pk), {'parent': None})
+        update_with_nested_intervals(ExampleModel, ('id', tree['2.1'].pk), {'parent': None})
 
         self.assertEqual(tree['2.1'].get_matrix(), Matrix(2, -1, 3, -1))
         self.assertEqual(tree['2.1.1'].get_matrix(), Matrix(3, -2, 5, -3))
@@ -142,9 +142,9 @@ class TestModel(TestCase):
             context.exception.message,
             "'conflict' is already an existing model field.")
 
-    def test_create(self):
+    def test_create_with_nested_intervals(self):
         self.assertEqual(ExampleModel.objects.count(), 0)
-        create(ExampleModel, [
+        create_with_nested_intervals(ExampleModel, [
             {'name': 'example1',},
             {'name': 'example2',},
         ])
@@ -154,7 +154,7 @@ class TestModel(TestCase):
         )
 
     def test_root_save(self):
-        root = create(ExampleModel, [{'name': 'example 1'}])
+        root = create_with_nested_intervals(ExampleModel, [{'name': 'example 1'}])
         root = ExampleModel.objects.all().get()
         self.assertEqual(root.get_matrix(), Matrix(1, -1, 2, -1))
 
@@ -169,19 +169,19 @@ class TestModel(TestCase):
 
 class ChildTest(TestCase):
     def test_save_children(self):
-        root = create(ExampleModel, [{'name': 'Root'}])
+        root = create_with_nested_intervals(ExampleModel, [{'name': 'Root'}])
         root = ExampleModel.objects.all().get()
 
         self.assertEqual(root.get_abs_matrix(), Matrix(1, 1, 2, 1))
         self.assertEqual(root.parent, None)
 
-        create(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}])
+        create_with_nested_intervals(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}])
         root, child1  = ExampleModel.objects.order_by('pk')
 
         self.assertEqual(child1.parent, root)
         self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))
 
-        create(ExampleModel, [{'name': 'Child 2' ,'parent': root.pk}])
+        create_with_nested_intervals(ExampleModel, [{'name': 'Child 2' ,'parent': root.pk}])
 
         root, child1, child2 = ExampleModel.objects.order_by('pk')
         self.assertEqual(child2.get_abs_matrix(), Matrix(2, 1, 5, 2))
@@ -227,7 +227,7 @@ class ChildTest(TestCase):
 
         # Make 2 child of 3
 
-        update(ExampleModel, ('id', tree['2'].pk), {
+        update_with_nested_intervals(ExampleModel, ('id', tree['2'].pk), {
             'parent': tree['3'].pk,
         })
 
@@ -254,7 +254,7 @@ class ChildTest(TestCase):
 
         # Make 2.1 child of 1.1
 
-        update(ExampleModel, ('id', tree['2.1'].pk), {'parent': tree['1.1'].pk})
+        update_with_nested_intervals(ExampleModel, ('id', tree['2.1'].pk), {'parent': tree['1.1'].pk})
 
         self.assertEqual(
             [i.pk for i in tree['3'].get_descendants().order_by('pk')],
@@ -292,30 +292,30 @@ class ChildTest(TestCase):
         Saving the same child to the same parent will
         make the child younger and younger.
         """
-        create(ExampleModel, [{'name': 'Root'}])
+        create_with_nested_intervals(ExampleModel, [{'name': 'Root'}])
         root = ExampleModel.objects.all().get()
 
-        create(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}])
+        create_with_nested_intervals(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}])
         root, child1 = ExampleModel.objects.all().order_by('pk')
 
         self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))
 
-        update(ExampleModel, ('id', child1.pk), {'parent': root.pk})
+        update_with_nested_intervals(ExampleModel, ('id', child1.pk), {'parent': root.pk})
 
         root, child1 = ExampleModel.objects.all().order_by('pk')
         self.assertEqual(child1.get_abs_matrix(), Matrix(2, 1, 5, 2))
 
     def test_set_child_after_deleting_sibling(self):
-        create(ExampleModel, [{'name': 'Root'}]) # 1 1 2 1
+        create_with_nested_intervals(ExampleModel, [{'name': 'Root'}]) # 1 1 2 1
         root = ExampleModel.objects.all().get()
 
-        create(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}]) # 1 1 3 2
+        create_with_nested_intervals(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}]) # 1 1 3 2
         root, child1 = ExampleModel.objects.order_by('pk')
 
-        create(ExampleModel, [{'name': 'Child 2', 'parent': root.pk}]) # 2 1 5 2
+        create_with_nested_intervals(ExampleModel, [{'name': 'Child 2', 'parent': root.pk}]) # 2 1 5 2
         root, child1, child2 = ExampleModel.objects.order_by('pk')
 
-        create(ExampleModel, [{'name': 'Child 3', 'parent': root.pk}]) # 3 1 7 2
+        create_with_nested_intervals(ExampleModel, [{'name': 'Child 3', 'parent': root.pk}]) # 3 1 7 2
         root, child1, child2, child3 = ExampleModel.objects.order_by('pk')
 
         self.assertEqual(root.get_abs_matrix(), Matrix(1, 1, 2, 1))
@@ -327,7 +327,7 @@ class ChildTest(TestCase):
 
         self.assertEqual(last_child_of(root), child3)
 
-        create(ExampleModel, [{'name': 'Child 4', 'parent': root.pk}]) # 4 1 9 2
+        create_with_nested_intervals(ExampleModel, [{'name': 'Child 4', 'parent': root.pk}]) # 4 1 9 2
 
         root, child1, child3, child4 = ExampleModel.objects.order_by('pk')
         self.assertEqual(child3.name, 'Child 3')
