@@ -194,7 +194,7 @@ def clean(Model, d, i=0):
                 for name, value in izip(Model._nested_intervals_field_names[0:-1], imap(abs, child_matrix))
             },
             d
-        ).items()
+        ).iteritems()
     }
 
 def multi_clean(Model, l):
@@ -215,7 +215,7 @@ def update(Model, pk_column_value, column_values):
     pk_key, pk_value = pk_column_value
     table = Table(Model._meta.db_table)
 
-    cvalues1, cvalues2  = tee(clean(Model, column_values).items())
+    cvalues1, cvalues2  = tee(clean(Model, column_values).iteritems())
 
     table_columns = [
         getattr(table, column)
