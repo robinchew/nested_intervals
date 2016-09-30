@@ -207,9 +207,16 @@ def clean_default(Model, d, i=0):
 def create_with_nested_intervals(Model, multi_column_values, clean=clean_nested_intervals):
     create(Model, multi_column_values, clean)
 
-def create(Model, multi_column_values, clean=clean_default):
+def create(Model, multi_column_values, allowed_columns, clean=clean_default):
     table = Table(Model._meta.db_table)
-    validate_multi_column_values(multi_column_values)
+    validate_multi_column_values([
+        {
+            column: value
+            for column, value in m.iteritems()
+            if column in allowed_columns
+        }
+        for m in multi_column_values
+    ])
 
     for fields in [clean(Model, d, i) for i, d in enumerate(multi_column_values)]:
         instance = Model()
@@ -218,12 +225,16 @@ def create(Model, multi_column_values, clean=clean_default):
         instance.save()
     return instance.pk
 
-def update(Model, pk_column_value, column_values, clean=clean_default):
+def update(Model, pk_column_value, column_values, allowed_columns, clean=clean_default):
     assert len(pk_column_value) == 2
     pk_key, pk_value = pk_column_value
     table = Table(Model._meta.db_table)
 
-    cvalues1, cvalues2  = tee(clean(Model, column_values).iteritems())
+    cvalues1, cvalues2  = tee(clean(Model, {
+        column: value
+        for column, value in column_values.iteritems()
+        if column in allowed_columns
+    }).iteritems())
 
     table_columns = [
         getattr(table, column)
