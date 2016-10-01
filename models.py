@@ -208,9 +208,6 @@ def clean_default(Model, d, i=0):
         clean_nested_intervals(Model, d, i)
     )
 
-def create_with_nested_intervals(Model, allowed_columns, multi_column_values):
-    return create(Model, allowed_columns, multi_column_values)
-
 def create(Model, allowed_columns, multi_column_values):
     table = Table(Model._meta.db_table)
     validate_multi_column_values(multi_column_values, allowed_columns)
@@ -222,6 +219,7 @@ def create(Model, allowed_columns, multi_column_values):
         instance.save()
     return instance.pk
 
+@transaction.atomic
 def update(Model, allowed_columns, pk_column_value, column_values):
     assert len(pk_column_value) == 2
 
@@ -246,17 +244,14 @@ def update(Model, allowed_columns, pk_column_value, column_values):
         ))
         assert cursor.rowcount == 1, 'SQL Update Failed'
 
-@transaction.atomic
-def update_with_nested_intervals(Model, allowed_columns, pk_column_value, column_values):
-    update(Model, allowed_columns, pk_column_value, column_values)
-
-    pk_key, pk_value = pk_column_value
-    children = Model.objects.filter(parent=pk_value).iterator()
-
     # Updating a node's parent should result in
     # updating of the node's descendants.
 
-    for child in children:
-        update_with_nested_intervals(Model, allowed_columns, (pk_key, child.pk), {
-            'parent': pk_value,
-        })
+    if issubclass(Model, NestedIntervalsModelMixin):
+        parent_name = Model._nested_intervals_field_names[-1]
+        if parent_name in column_values:
+            children = Model.objects.filter(parent=pk_value).iterator()
+            for child in children:
+                update(Model, allowed_columns, (pk_key, child.pk), {
+                    'parent': pk_value,
+                })

@@ -9,7 +9,6 @@ from nested_intervals.matrix import get_child_matrix
 from nested_intervals.models import NestedIntervalsModelMixin
 from nested_intervals.models import create
 from nested_intervals.models import update
-from nested_intervals.models import update_with_nested_intervals
 from nested_intervals.tests.models import ExampleModel
 from nested_intervals.tests.models import ExampleModelWithoutNestedIntervals
 from nested_intervals.queryset import last_child_of
@@ -28,7 +27,7 @@ def create_for_test(Model, d_list):
     ])
 
 def update_for_test(Model, id_key_value, d):
-    return update_with_nested_intervals(Model, ('parent',), id_key_value, d)
+    return update(Model, ('parent',), id_key_value, d)
 
 class Tree(dict):
     def __init__(self, d):
