@@ -9,12 +9,27 @@ from nested_intervals.matrix import get_child_matrix
 from nested_intervals.models import NestedIntervalsModelMixin
 from nested_intervals.models import create
 from nested_intervals.models import update
-from nested_intervals.models import create_with_nested_intervals
-from nested_intervals.models import update_with_nested_intervals
+from nested_intervals.models import create_with_nested_intervals as create_with_ni
+from nested_intervals.models import update_with_nested_intervals as update_with_ni
 from nested_intervals.tests.models import ExampleModel
 from nested_intervals.tests.models import ExampleModelWithoutNestedIntervals
 from nested_intervals.queryset import last_child_of
 
+try:
+    from collections import ChainMap
+except ImportError:
+    from chainmap import ChainMap
+
+def create_with_nested_intervals(Model, d_list):
+    return create_with_ni(Model, ('name', 'parent',), [
+        ChainMap(d, {
+            'parent': None
+        })
+        for d in d_list
+    ])
+
+def update_with_nested_intervals(Model, id_key_value, d):
+    return update_with_ni(Model, ('parent',), id_key_value, d)
 
 class Tree(dict):
     def __init__(self, d):
@@ -79,7 +94,7 @@ class FakeModel(object):
 class ModelCreateUpdateTest(TestCase):
     def test_create(self):
         self.assertEqual(ExampleModelWithoutNestedIntervals.objects.count(), 0)
-        create(ExampleModelWithoutNestedIntervals, (
+        create(ExampleModelWithoutNestedIntervals, ('name',), (
             {'name': 'First'},
             {'name': 'Second'}
         ))
@@ -91,6 +106,7 @@ class ModelCreateUpdateTest(TestCase):
         first, second = ExampleModelWithoutNestedIntervals.objects.order_by('pk')
 
         update(ExampleModelWithoutNestedIntervals,
+            ('name',),
             ('id', second.pk),
             {'name': 'Second2'},
         )

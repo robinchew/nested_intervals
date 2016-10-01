@@ -158,24 +158,24 @@ class NestedIntervalsModelMixin(models.Model):
         self.save(*args, **kwargs)
         return self
 
-def validate_multi_column_values(d_list):
+def validate_multi_column_values(d_list, allowed_columns):
+    for d in d_list:
+        for column, value in d.iteritems():
+            assert column in allowed_columns, "'{}' is not set as allowed".format(column)
+
     d1, d2 = tee(d_list)
     next(d2, None)
 
     for a, b in izip(d1, d2):
         remaining_keys = set(a.keys()).difference(b.keys())
-        if len(remaining_keys):
-            raise Exception('All column values must have matching keys. These keys are mismatched: {}.'.format(', '.join(remaining_keys)))
+        assert len(remaining_keys) == 0, 'All column values must have matching keys. These keys are mismatched: {}.'.format(', '.join(remaining_keys))
 
 def clean_field_name(Model, name):
     if type(Model._meta.get_field(name)) == models.ForeignKey:
         return name+'_id'
     return name
 
-def clean_nested_intervals(Model, d, i=0):
-    parent_name = Model._nested_intervals_field_names[-1]
-    parent_id = d.get(parent_name, None)
-
+def clean_nested_intervals_by_parent_id(Model, parent_id=None, i=0):
     if parent_id:
         parent = Model.objects.get(pk=parent_id)
         parent_matrix = parent.get_matrix()
@@ -189,52 +189,49 @@ def clean_nested_intervals(Model, d, i=0):
 
     return {
         clean_field_name(Model, name): value
-        for name, value in ChainMap(
-            {
-                name: value
-                for name, value in izip(Model._nested_intervals_field_names[0:-1], imap(abs, child_matrix))
-            },
-            d
-        ).iteritems()
+        for name, value in izip(Model._nested_intervals_field_names[0:-1], imap(abs, child_matrix))
     }
+
+def clean_nested_intervals(Model, d, i=0):
+    if issubclass(Model, NestedIntervalsModelMixin):
+        parent_name = Model._nested_intervals_field_names[-1]
+        if parent_name in d:
+            return clean_nested_intervals_by_parent_id(Model, d[parent_name], i)
+    return {}
 
 def clean_default(Model, d, i=0):
-    return {
-        clean_field_name(Model, name): value
-        for name, value in d.iteritems()
-    }
-
-def create_with_nested_intervals(Model, multi_column_values, clean=clean_nested_intervals):
-    create(Model, multi_column_values, clean)
-
-def create(Model, multi_column_values, allowed_columns, clean=clean_default):
-    table = Table(Model._meta.db_table)
-    validate_multi_column_values([
+    return ChainMap(
         {
-            column: value
-            for column, value in m.iteritems()
-            if column in allowed_columns
-        }
-        for m in multi_column_values
-    ])
+            clean_field_name(Model, name): value
+            for name, value in d.iteritems()
+        },
+        clean_nested_intervals(Model, d, i)
+    )
 
-    for fields in [clean(Model, d, i) for i, d in enumerate(multi_column_values)]:
+def create_with_nested_intervals(Model, allowed_columns, multi_column_values):
+    return create(Model, allowed_columns, multi_column_values)
+
+def create(Model, allowed_columns, multi_column_values):
+    table = Table(Model._meta.db_table)
+    validate_multi_column_values(multi_column_values, allowed_columns)
+
+    for fields in [clean_default(Model, d, i) for i, d in enumerate(multi_column_values)]:
         instance = Model()
         for field, value in fields.iteritems():
             setattr(instance, field, value)
         instance.save()
     return instance.pk
 
-def update(Model, pk_column_value, column_values, allowed_columns, clean=clean_default):
+def update(Model, allowed_columns, pk_column_value, column_values):
     assert len(pk_column_value) == 2
+
+    for column, value in column_values.iteritems():
+        assert column in allowed_columns, "'{}' is not set as allowed".format(column)
+
     pk_key, pk_value = pk_column_value
     table = Table(Model._meta.db_table)
 
-    cvalues1, cvalues2  = tee(clean(Model, {
-        column: value
-        for column, value in column_values.iteritems()
-        if column in allowed_columns
-    }).iteritems())
+    cvalues1, cvalues2  = tee(clean_default(Model, column_values).iteritems())
 
     table_columns = [
         getattr(table, column)
@@ -250,17 +247,16 @@ def update(Model, pk_column_value, column_values, allowed_columns, clean=clean_d
         assert cursor.rowcount == 1, 'SQL Update Failed'
 
 @transaction.atomic
-def update_with_nested_intervals(Model, pk_column_value, column_values, clean=clean_nested_intervals):
-    update(Model, pk_column_value, column_values, clean)
+def update_with_nested_intervals(Model, allowed_columns, pk_column_value, column_values):
+    update(Model, allowed_columns, pk_column_value, column_values)
 
     pk_key, pk_value = pk_column_value
-    parent_name = Model._nested_intervals_field_names[-1]
     children = Model.objects.filter(parent=pk_value).iterator()
 
     # Updating a node's parent should result in
     # updating of the node's descendants.
 
     for child in children:
-        update_with_nested_intervals(Model, (pk_key, child.pk), {
+        update_with_nested_intervals(Model, allowed_columns, (pk_key, child.pk), {
             'parent': pk_value,
         })
