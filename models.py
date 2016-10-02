@@ -221,7 +221,7 @@ def create(Model, allowed_columns, multi_column_values):
 
 @transaction.atomic
 def update(Model, allowed_columns, pk_column_value, column_values):
-    assert len(pk_column_value) == 2
+    assert len(pk_column_value) == 2, "Length of {} is not 2.".format(pk_column_value)
 
     for column, value in column_values.iteritems():
         assert column in allowed_columns, "'{}' is not set as allowed".format(column)
