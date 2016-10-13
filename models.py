@@ -19,8 +19,11 @@ from nested_intervals.queryset import reroot
 
 from nested_intervals.validation import validate_node
 
+from sql import Literal
+from sql import Null
 from sql import Table
 
+from functools import reduce
 from itertools import imap, izip, tee
 
 try:
@@ -171,7 +174,7 @@ def validate_multi_column_values(d_list, allowed_columns):
         assert len(remaining_keys) == 0, 'All column values must have matching keys. These keys are mismatched: {}.'.format(', '.join(remaining_keys))
 
 def clean_field_name(Model, name):
-    if type(Model._meta.get_field(name)) == models.ForeignKey:
+    if issubclass(type(Model._meta.get_field(name)), models.ForeignKey):
         return name+'_id'
     return name
 
@@ -221,12 +224,9 @@ def create(Model, allowed_columns, multi_column_values):
 
 @transaction.atomic
 def update(Model, allowed_columns, pk_column_value, column_values):
-    assert len(pk_column_value) == 2, "Length of {} is not 2.".format(pk_column_value)
-
     for column, value in column_values.iteritems():
         assert column in allowed_columns, "'{}' is not set as allowed".format(column)
 
-    pk_key, pk_value = pk_column_value
     table = Table(Model._meta.db_table)
 
     cvalues1, cvalues2  = tee(clean_default(Model, column_values).iteritems())
@@ -237,12 +237,19 @@ def update(Model, allowed_columns, pk_column_value, column_values):
     ]
 
     with connection.cursor() as cursor:
+        def where_and(a, b):
+            bkey, bvalue = b
+            return a & (getattr(table, bkey) == bvalue)
+
         cursor.execute(*table.update(
             columns=table_columns,
             values=[value for column, value in cvalues2],
-            where=getattr(table, pk_key) == pk_value
+            where=reduce(
+                where_and,
+                pk_column_value.iteritems(),
+                Literal(1) == Literal(1)) # Hacky way to generate filter using reduce with initial value
         ))
-        assert cursor.rowcount == 1, 'Expect only 1 SQL Update. Got {} instead.'.format(cursor.rowcount)
+        assert cursor.rowcount == 1, 'Expect only 1 SQL Update. Got {} instead. pk_column_value={}'.format(cursor.rowcount, pk_column_value)
 
     # Updating a node's parent should result in
     # updating of the node's descendants.
