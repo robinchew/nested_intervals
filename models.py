@@ -242,7 +242,7 @@ def update(Model, allowed_columns, pk_column_value, column_values):
             values=[value for column, value in cvalues2],
             where=getattr(table, pk_key) == pk_value
         ))
-        assert cursor.rowcount == 1, 'SQL Update Failed'
+        assert cursor.rowcount == 1, 'Expect only 1 SQL Update. Got {} instead.'.format(cursor.rowcount)
 
     # Updating a node's parent should result in
     # updating of the node's descendants.
