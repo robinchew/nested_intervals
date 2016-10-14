@@ -257,8 +257,13 @@ def update(Model, allowed_columns, pk_column_value, column_values):
     if issubclass(Model, NestedIntervalsModelMixin):
         parent_name = Model._nested_intervals_field_names[-1]
         if parent_name in column_values:
-            children = Model.objects.filter(parent=pk_value).iterator()
+            parent_id = Model.objects.get(**pk_column_value).pk
+            id_filter = {
+                parent_name+'__'+key: value
+                for key, value in pk_column_value.iteritems()
+            }
+            children = Model.objects.filter(**id_filter).iterator()
             for child in children:
-                update(Model, allowed_columns, (pk_key, child.pk), {
-                    'parent': pk_value,
+                update(Model, allowed_columns, {Model._meta.pk.name: child.pk}, {
+                    'parent': parent_id,
                 })

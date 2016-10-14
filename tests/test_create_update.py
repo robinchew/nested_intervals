@@ -28,7 +28,7 @@ class ModelCreateUpdateTest(TestCase):
 
         update(ExampleModelWithoutNestedIntervals,
             ('name',),
-            ('id', second.pk),
+            {'id': second.pk},
             {'name': 'Second2'},
         )
 
@@ -45,9 +45,8 @@ class ModelCreateUpdateTest(TestCase):
         with self.assertRaises(AssertionError) as assertion:
             update(ExampleModelWithoutNestedIntervals,
                 ('name',),
-                ('name', 'First'),
-                {'name': 'Second'},
-            )
+                {'name': 'First'},
+                {'name': 'Second'})
 
         assert 'Expect only 1' in assertion.exception.message
         assert 'Got 2' in assertion.exception.message

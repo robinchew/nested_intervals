@@ -25,7 +25,8 @@ def create_for_test(Model, d_list):
     ])
 
 def update_for_test(Model, id_key_value, d):
-    return update(Model, ('parent',), id_key_value, d)
+    id_key, id_value = id_key_value
+    return update(Model, ('parent',), {id_key: id_value}, d)
 
 class Tree(dict):
     def __init__(self, d):
