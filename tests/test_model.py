@@ -17,16 +17,16 @@ except ImportError:
     from chainmap import ChainMap
 
 def create_for_test(Model, d_list):
-    return create(Model, ('name', 'parent',), [
+    return create(Model, ('name', 'parent_id',), [
         ChainMap(d, {
-            'parent': None
+            'parent_id': None
         })
         for d in d_list
     ])
 
 def update_for_test(Model, id_key_value, d):
     id_key, id_value = id_key_value
-    return update(Model, ('parent',), {id_key: id_value}, d)
+    return update(Model, ('parent_id',), {id_key: id_value}, d)
 
 class Tree(dict):
     def __init__(self, d):
@@ -139,7 +139,7 @@ class RootTest(TestCase):
         self.assertEqual(tree['2.1'].get_matrix(), Matrix(3, -2, 8, -5))
         self.assertEqual(tree['2.1.1'].get_matrix(), Matrix(4, -3, 11, -8))
 
-        update_for_test(ExampleModel, ('id', tree['2.1'].pk), {'parent': None})
+        update_for_test(ExampleModel, ('id', tree['2.1'].pk), {'parent_id': None})
 
         self.assertEqual(tree['2.1'].get_matrix(), Matrix(2, -1, 3, -1))
         self.assertEqual(tree['2.1.1'].get_matrix(), Matrix(3, -2, 5, -3))
@@ -151,7 +151,7 @@ class TestModel(TestCase):
             class InvalidExampleModel(NestedIntervalsModelMixin, FakeModel):
                 conflict = models.CharField()
 
-            nested_intervals.register_fields(InvalidExampleModel, 'a11', 'conflict', 'a21', 'a22', 'parent')
+            nested_intervals.register_fields(InvalidExampleModel, 'a11', 'conflict', 'a21', 'a22', 'parent_id')
 
         self.assertEqual(
             context.exception.message,
@@ -190,13 +190,13 @@ class ChildTest(TestCase):
         self.assertEqual(root.get_abs_matrix(), Matrix(1, 1, 2, 1))
         self.assertEqual(root.parent, None)
 
-        create_for_test(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}])
+        create_for_test(ExampleModel, [{'name': 'Child 1', 'parent_id': root.pk}])
         root, child1  = ExampleModel.objects.order_by('pk')
 
         self.assertEqual(child1.parent, root)
         self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))
 
-        create_for_test(ExampleModel, [{'name': 'Child 2' ,'parent': root.pk}])
+        create_for_test(ExampleModel, [{'name': 'Child 2' ,'parent_id': root.pk}])
 
         root, child1, child2 = ExampleModel.objects.order_by('pk')
         self.assertEqual(child2.get_abs_matrix(), Matrix(2, 1, 5, 2))
@@ -243,7 +243,7 @@ class ChildTest(TestCase):
         # Make 2 child of 3
 
         update_for_test(ExampleModel, ('id', tree['2'].pk), {
-            'parent': tree['3'].pk,
+            'parent_id': tree['3'].pk,
         })
 
         self.assertEqual(tree['2'].get_parent(), tree['3'])
@@ -269,7 +269,7 @@ class ChildTest(TestCase):
 
         # Make 2.1 child of 1.1
 
-        update_for_test(ExampleModel, ('id', tree['2.1'].pk), {'parent': tree['1.1'].pk})
+        update_for_test(ExampleModel, ('id', tree['2.1'].pk), {'parent_id': tree['1.1'].pk})
 
         self.assertEqual(
             [i.pk for i in tree['3'].get_descendants().order_by('pk')],
@@ -310,12 +310,12 @@ class ChildTest(TestCase):
         create_for_test(ExampleModel, [{'name': 'Root'}])
         root = ExampleModel.objects.all().get()
 
-        create_for_test(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}])
+        create_for_test(ExampleModel, [{'name': 'Child 1', 'parent_id': root.pk}])
         root, child1 = ExampleModel.objects.all().order_by('pk')
 
         self.assertEqual(child1.get_abs_matrix(), Matrix(1, 1, 3, 2))
 
-        update_for_test(ExampleModel, ('id', child1.pk), {'parent': root.pk})
+        update_for_test(ExampleModel, ('id', child1.pk), {'parent_id': root.pk})
 
         root, child1 = ExampleModel.objects.all().order_by('pk')
         self.assertEqual(child1.get_abs_matrix(), Matrix(2, 1, 5, 2))
@@ -324,13 +324,13 @@ class ChildTest(TestCase):
         create_for_test(ExampleModel, [{'name': 'Root'}]) # 1 1 2 1
         root = ExampleModel.objects.all().get()
 
-        create_for_test(ExampleModel, [{'name': 'Child 1', 'parent': root.pk}]) # 1 1 3 2
+        create_for_test(ExampleModel, [{'name': 'Child 1', 'parent_id': root.pk}]) # 1 1 3 2
         root, child1 = ExampleModel.objects.order_by('pk')
 
-        create_for_test(ExampleModel, [{'name': 'Child 2', 'parent': root.pk}]) # 2 1 5 2
+        create_for_test(ExampleModel, [{'name': 'Child 2', 'parent_id': root.pk}]) # 2 1 5 2
         root, child1, child2 = ExampleModel.objects.order_by('pk')
 
-        create_for_test(ExampleModel, [{'name': 'Child 3', 'parent': root.pk}]) # 3 1 7 2
+        create_for_test(ExampleModel, [{'name': 'Child 3', 'parent_id': root.pk}]) # 3 1 7 2
         root, child1, child2, child3 = ExampleModel.objects.order_by('pk')
 
         self.assertEqual(root.get_abs_matrix(), Matrix(1, 1, 2, 1))
@@ -342,7 +342,7 @@ class ChildTest(TestCase):
 
         self.assertEqual(last_child_of(root), child3)
 
-        create_for_test(ExampleModel, [{'name': 'Child 4', 'parent': root.pk}]) # 4 1 9 2
+        create_for_test(ExampleModel, [{'name': 'Child 4', 'parent_id': root.pk}]) # 4 1 9 2
 
         root, child1, child3, child4 = ExampleModel.objects.order_by('pk')
         self.assertEqual(child3.name, 'Child 3')

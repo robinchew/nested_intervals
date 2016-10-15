@@ -195,8 +195,8 @@ def clean_nested_intervals_by_parent_id(Model, parent_id=None, i=0):
 def clean_nested_intervals(Model, d, i=0):
     if issubclass(Model, NestedIntervalsModelMixin):
         parent_name = Model._nested_intervals_field_names[-1]
-        if parent_name in d:
-            return clean_nested_intervals_by_parent_id(Model, d[parent_name], i)
+        if parent_name+'_id' in d:
+            return clean_nested_intervals_by_parent_id(Model, d[parent_name+'_id'], i)
     return {}
 
 def clean_default(Model, d, i=0):
@@ -253,7 +253,7 @@ def update(Model, allowed_columns, pk_column_value, column_values):
 
     if issubclass(Model, NestedIntervalsModelMixin):
         parent_name = Model._nested_intervals_field_names[-1]
-        if parent_name in column_values:
+        if parent_name+'_id' in column_values:
             parent_id = Model.objects.get(**pk_column_value).pk
             id_filter = {
                 parent_name+'__'+key: value
@@ -262,5 +262,5 @@ def update(Model, allowed_columns, pk_column_value, column_values):
             children = Model.objects.filter(**id_filter).iterator()
             for child in children:
                 update(Model, allowed_columns, {Model._meta.pk.name: child.pk}, {
-                    'parent': parent_id,
+                    parent_name+'_id': parent_id,
                 })
