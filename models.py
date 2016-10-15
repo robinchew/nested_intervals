@@ -173,9 +173,6 @@ def validate_multi_column_values(d_list, allowed_columns):
         remaining_keys = set(a.keys()).difference(b.keys())
         assert len(remaining_keys) == 0, 'All column values must have matching keys. These keys are mismatched: {}.'.format(', '.join(remaining_keys))
 
-def clean_field_name(Model, name):
-    return name
-
 def clean_nested_intervals_by_parent_id(Model, parent_id=None, i=0):
     if parent_id:
         parent = Model.objects.get(pk=parent_id)
@@ -187,10 +184,9 @@ def clean_nested_intervals_by_parent_id(Model, parent_id=None, i=0):
         parent_matrix,
         Model.last_child_nth_of(parent_matrix) + i + 1
     )
-    return {
-        clean_field_name(Model, name): value
-        for name, value in izip(Model._nested_intervals_field_names[0:-1], imap(abs, child_matrix))
-    }
+    return dict(izip(
+        Model._nested_intervals_field_names[0:-1],
+        imap(abs, child_matrix)))
 
 def clean_nested_intervals(Model, d, i=0):
     if issubclass(Model, NestedIntervalsModelMixin):
@@ -201,10 +197,7 @@ def clean_nested_intervals(Model, d, i=0):
 
 def clean_default(Model, d, i=0):
     return ChainMap(
-        {
-            clean_field_name(Model, name): value
-            for name, value in d.iteritems()
-        },
+        d,
         clean_nested_intervals(Model, d, i)
     )
 
