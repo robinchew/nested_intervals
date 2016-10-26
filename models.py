@@ -201,16 +201,18 @@ def clean_default(Model, d, i=0):
         clean_nested_intervals(Model, d, i)
     )
 
-def create(Model, allowed_columns, multi_column_values):
-    table = Table(Model._meta.db_table)
-    validate_multi_column_values(multi_column_values, allowed_columns)
-
+def created_instances(Model, multi_column_values):
     for fields in [clean_default(Model, d, i) for i, d in enumerate(multi_column_values)]:
         instance = Model()
         for field, value in fields.iteritems():
             setattr(instance, field, value)
         instance.save()
-    return instance.pk
+        yield instance.pk
+
+def create(Model, allowed_columns, multi_column_values):
+    table = Table(Model._meta.db_table)
+    validate_multi_column_values(multi_column_values, allowed_columns)
+    return tuple(created_instances(Model, multi_column_values))
 
 @transaction.atomic
 def update(Model, allowed_columns, pk_column_value, column_values):
