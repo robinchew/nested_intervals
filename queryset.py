@@ -9,7 +9,7 @@ import functools
 import operator
 
 def children_of_matrix(queryset, matrix):
-    name11, name12, name21, name22 = queryset.model._nested_intervals_field_names
+    name11, name12, name21, name22 = queryset.model._nested_intervals_field_names[0:4]
     parent_value11, parent_value12, parent_value21, parent_value22 = matrix
 
     return queryset.filter(**{
