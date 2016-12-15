@@ -6,9 +6,6 @@ except ImportError:
 from django.core.exceptions import FieldError
 from django.db import models as django_models
 
-from nested_intervals.models import NestedIntervalsModelMixin
-from nested_intervals.managers import NestedIntervalsManager
-
 def get_model_field_names(model_class):
     return tuple(field.name for field in model_class._meta.fields)
 
