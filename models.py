@@ -216,6 +216,7 @@ def create(Model, allowed_columns, multi_column_values):
 
 @transaction.atomic
 def update(Model, allowed_columns, pk_column_value, column_values):
+    assert pk_column_value, "'pk_column_value' must be a non-empty dictionary with column name as key, and primary key as value."
     for column, value in column_values.iteritems():
         assert column in allowed_columns, "'{}' is not set as allowed".format(column)
 
