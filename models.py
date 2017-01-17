@@ -206,6 +206,7 @@ def created_instances(Model, multi_column_values):
         instance = Model()
         for field, value in fields.iteritems():
             setattr(instance, field, value)
+        assert instance.pk is None, 'Primary key cannot be set because you are creating, NOT updating.'
         instance.save()
         yield instance.pk
 
