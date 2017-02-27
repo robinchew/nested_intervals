@@ -261,3 +261,4 @@ def update(Model, allowed_columns, pk_column_value, column_values):
                 update(Model, allowed_columns, {Model._meta.pk.name: child.pk}, {
                     parent_name+'_id': parent_id,
                 })
+    return Model.objects.get(**pk_column_value).pk
