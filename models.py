@@ -206,7 +206,7 @@ def created_instances(Model, multi_column_values):
         instance = Model()
         for field, value in fields.iteritems():
             setattr(instance, field, value)
-        assert instance.pk is None, 'Primary key of {} cannot be set because you are creating, NOT updating.'.format(Model.__name__)
+        assert instance.pk is None, 'Primary key of {} should not be set before save because you intend to create, but you are updating instead.'.format(Model.__name__)
         instance.save()
         yield instance.pk
 
