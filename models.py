@@ -118,7 +118,7 @@ class NestedIntervalsModelMixin(models.Model):
             parent_matrix = INVISIBLE_ROOT_MATRIX
         child_matrix = get_child_matrix(
             parent_matrix,
-            last_child_nth_of(type(self.objects), parent_matrix) + 1)
+            last_child_nth_of(type(self).objects, parent_matrix) + 1)
 
         try:
             validate_node(self)
