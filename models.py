@@ -11,6 +11,8 @@ from nested_intervals.managers import NestedIntervalsManager, NestedIntervalsQue
 from nested_intervals.matrix import Matrix, get_child_matrix, get_ancestors_matrix, get_root_matrix
 from nested_intervals.matrix import INVISIBLE_ROOT_MATRIX
 
+from nested_intervals.queryset import get_matrix
+from nested_intervals.queryset import get_nth
 from nested_intervals.queryset import children_of
 from nested_intervals.queryset import children_of_matrix
 from nested_intervals.queryset import last_child_of
@@ -48,10 +50,7 @@ class NestedIntervalsModelMixin(models.Model):
         }
 
     def get_matrix(self):
-        return Matrix(*(
-            getattr(self, field_name) * (1 if (i % 2 == 0) else -1)
-            for i, field_name in enumerate(self._nested_intervals_field_names[0:-1]))
-        )
+        return get_matrix(self)
 
     def get_abs_matrix(self):
         return Matrix(*tuple(abs(num) for num in self.get_matrix()))
@@ -103,10 +102,6 @@ class NestedIntervalsModelMixin(models.Model):
         This EXCLUDES siblings and cousins.
         """
         return self.get_ancestors() | self.get_descendants() | self.__class__.objects.filter(pk=self.pk)
-
-    def get_nth(self):
-        n11, n12, n21, n22, parent_name = self._nested_intervals_field_names
-        return int(getattr(self, n11) / getattr(self, n12))
 
     def set_matrix(self, matrix):
         for field_name, num in zip(self._nested_intervals_field_names, matrix):
@@ -168,7 +163,7 @@ def validate_multi_column_values(d_list, allowed_columns):
 def clean_nested_intervals_by_parent_id(Model, parent_id=None, i=0):
     if parent_id:
         parent = Model.objects.get(pk=parent_id)
-        parent_matrix = parent.get_matrix()
+        parent_matrix = get_matrix(parent)
     else:
         parent_matrix = INVISIBLE_ROOT_MATRIX
 
