@@ -189,8 +189,11 @@ def clean_nested_intervals_by_parent_id(Model, parent_id=None, i=0):
         imap(abs, child_matrix)))
 
 def clean_nested_intervals(Model, d, i=0):
-    if issubclass(Model, NestedIntervalsModelMixin):
+    try:
         parent_name = Model._nested_intervals_field_names[-1]
+    except AttributeError:
+        pass
+    else:
         if parent_name+'_id' in d:
             return clean_nested_intervals_by_parent_id(Model, d[parent_name+'_id'], i)
     return {}
@@ -248,8 +251,11 @@ def update(Model, allowed_columns, pk_column_value, column_values):
     # Updating a node's parent should result in
     # updating of the node's descendants.
 
-    if issubclass(Model, NestedIntervalsModelMixin):
+    try:
         parent_name = Model._nested_intervals_field_names[-1]
+    except AttributeError:
+        pass
+    else:
         if parent_name+'_id' in column_values:
             parent_id = Model.objects.get(**pk_column_value).pk
             id_filter = {
