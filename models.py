@@ -14,6 +14,7 @@ from nested_intervals.matrix import INVISIBLE_ROOT_MATRIX
 from nested_intervals.queryset import children_of
 from nested_intervals.queryset import children_of_matrix
 from nested_intervals.queryset import last_child_of
+from nested_intervals.queryset import last_child_nth_of
 from nested_intervals.queryset import last_child_of_matrix
 from nested_intervals.queryset import reroot
 
@@ -115,14 +116,6 @@ class NestedIntervalsModelMixin(models.Model):
         parent_name = self._nested_intervals_field_names[-1]
         setattr(self, parent_name, parent)
 
-    @classmethod
-    def last_child_nth_of(cls, parent_matrix):
-        try:
-            last_child = last_child_of_matrix(cls.objects, parent_matrix)
-            return last_child.get_nth()
-        except NoChildrenError:
-            return 0
-
     def set_as_child_of(self, parent):
         if parent:
             parent_matrix = parent.get_matrix()
@@ -130,8 +123,7 @@ class NestedIntervalsModelMixin(models.Model):
             parent_matrix = INVISIBLE_ROOT_MATRIX
         child_matrix = get_child_matrix(
             parent_matrix,
-            type(self).last_child_nth_of(parent_matrix) + 1
-        )
+            last_child_nth_of(type(self.objects), parent_matrix) + 1)
 
         try:
             validate_node(self)
@@ -182,7 +174,7 @@ def clean_nested_intervals_by_parent_id(Model, parent_id=None, i=0):
 
     child_matrix = get_child_matrix(
         parent_matrix,
-        Model.last_child_nth_of(parent_matrix) + i + 1
+        last_child_nth_of(Model.objects, parent_matrix) + i + 1
     )
     return dict(izip(
         Model._nested_intervals_field_names[0:-1],

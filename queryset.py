@@ -50,6 +50,13 @@ def last_child_of(parent):
     except IndexError:
         raise NoChildrenError()
 
+def last_child_nth_of(queryset, parent_matrix):
+    try:
+        last_child = last_child_of_matrix(queryset, parent_matrix)
+        return last_child.get_nth()
+    except NoChildrenError:
+        return 0
+
 def reroot(node, parent, child_matrix):
     validate_node(node)
     validate_node(parent)
