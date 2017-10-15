@@ -35,7 +35,7 @@ def set_parent(instance, parent):
 
 def set_as_child_of(instance, parent):
     if parent:
-        parent_matrix = parent.get_matrix()
+        parent_matrix = get_matrix(parent)
     else:
         parent_matrix = INVISIBLE_ROOT_MATRIX
     child_matrix = get_child_matrix(
@@ -66,7 +66,7 @@ def set_as_root(instance):
     return set_as_child_of(instance, None)
 
 def save_as_root(instance, *args, **kwargs):
-    instance.set_as_root()
+    set_as_root(instance)
     instance.save(*args, **kwargs)
     return instance
 

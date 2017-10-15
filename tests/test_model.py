@@ -31,12 +31,13 @@ def update_for_test(Model, id_key_value, d):
     return update(Model, ('parent_id',), {id_key: id_value}, d)
 
 class Tree(dict):
-    def __init__(self, d):
+    def __init__(self, get, d):
         self.d = d
+        self.get = get
         super(Tree, self).__init__(d)
 
     def __getitem__(self, key):
-        return ExampleModel.objects.get(pk=self.d[key].pk)
+        return self.get(pk=self.d[key].pk)
 
     def items(self):
         return (self[k] for k in super(Tree, self))
@@ -48,7 +49,8 @@ class Tree(dict):
         }
 
 
-def create_test_tree(ExampleModel=ExampleModel):
+def create_test_tree(ExampleModel=ExampleModel,
+                     get=ExampleModel.objects.get):
     root = ExampleModel(name='0')
     save_as_root(root) # 1 1 2 1
     child_1 = ExampleModel(name='1') # 1 1 3 2
@@ -72,7 +74,7 @@ def create_test_tree(ExampleModel=ExampleModel):
     child_3_1 = ExampleModel(name='3.1') # 5 3 12 7
     save_as_child_of(child_3_1, child_3)
 
-    return Tree({
+    return Tree(get, {
         '0': root,
         '1': child_1,
         '1.1': child_1_1,
