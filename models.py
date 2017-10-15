@@ -12,6 +12,7 @@ from nested_intervals.matrix import Matrix, get_child_matrix, get_ancestors_matr
 from nested_intervals.matrix import INVISIBLE_ROOT_MATRIX
 
 from nested_intervals.queryset import get_matrix
+from nested_intervals.queryset import get_abs_matrix
 from nested_intervals.queryset import get_nth
 from nested_intervals.queryset import children_of
 from nested_intervals.queryset import children_of_matrix
@@ -62,7 +63,7 @@ class NestedIntervalsModelMixin(models.Model):
         return get_matrix(self)
 
     def get_abs_matrix(self):
-        return Matrix(*tuple(abs(num) for num in self.get_matrix()))
+        return get_abs_matrix(self)
 
     def get_root(self):
         return self.__class__.objects.get(

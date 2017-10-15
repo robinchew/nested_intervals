@@ -21,6 +21,9 @@ def get_matrix(instance):
         for i, field_name in enumerate(instance._nested_intervals_field_names[0:-1]))
     )
 
+def get_abs_matrix(instance):
+    return Matrix(*tuple(abs(num) for num in get_matrix(instance)))
+
 def get_nth(instance):
     n11, n12, n21, n22, parent_name = instance._nested_intervals_field_names
     return int(getattr(instance, n11) / getattr(instance, n12))
