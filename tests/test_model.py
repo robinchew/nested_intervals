@@ -10,6 +10,8 @@ from nested_intervals.models import create
 from nested_intervals.models import update
 from nested_intervals.tests.models import ExampleModel
 from nested_intervals.queryset import last_child_of
+from nested_intervals.queryset import save_as_child_of
+from nested_intervals.queryset import save_as_root
 
 try:
     from collections import ChainMap
@@ -46,29 +48,29 @@ class Tree(dict):
         }
 
 
-def create_test_tree():
+def create_test_tree(ExampleModel=ExampleModel):
     root = ExampleModel(name='0')
-    root.save_as_root() # 1 1 2 1
+    save_as_root(root) # 1 1 2 1
     child_1 = ExampleModel(name='1') # 1 1 3 2
-    child_1.save_as_child_of(root)
+    save_as_child_of(child_1, root)
     child_1_1 = ExampleModel(name='1.1') # 1 1 4 3
-    child_1_1.save_as_child_of(child_1)
+    save_as_child_of(child_1_1, child_1)
     child_1_2 = ExampleModel(name='1.2') # 2 1 7 3
-    child_1_2.save_as_child_of(child_1)
+    save_as_child_of(child_1_2, child_1)
 
     child_2 = ExampleModel(name='2') # 2 1 5 2
-    child_2.save_as_child_of(root)
+    save_as_child_of(child_2, root)
     child_2_1 = ExampleModel(name='2.1') # 3 2 8 5
-    child_2_1.save_as_child_of(child_2)
+    save_as_child_of(child_2_1, child_2)
     child_2_1_1 = ExampleModel(name='2.1.1') # 4 3 11 8
-    child_2_1_1.save_as_child_of(child_2_1)
+    save_as_child_of(child_2_1_1, child_2_1)
     child_2_2 = ExampleModel(name='2.2') # 5 2 13 5
-    child_2_2.save_as_child_of(child_2)
+    save_as_child_of(child_2_2, child_2)
 
     child_3 = ExampleModel(name='3') # 3 1 7 2
-    child_3.save_as_child_of(root)
+    save_as_child_of(child_3, root)
     child_3_1 = ExampleModel(name='3.1') # 5 3 12 7
-    child_3_1.save_as_child_of(child_3)
+    save_as_child_of(child_3_1, child_3)
 
     return Tree({
         '0': root,

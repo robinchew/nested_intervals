@@ -18,6 +18,15 @@ from nested_intervals.queryset import children_of_matrix
 from nested_intervals.queryset import last_child_of
 from nested_intervals.queryset import last_child_nth_of
 from nested_intervals.queryset import last_child_of_matrix
+from nested_intervals.queryset import set_matrix
+from nested_intervals.queryset import set_parent
+
+from nested_intervals.queryset import set_as_child_of
+from nested_intervals.queryset import save_as_child_of
+
+from nested_intervals.queryset import set_as_root
+from nested_intervals.queryset import save_as_root
+
 from nested_intervals.queryset import reroot
 
 from nested_intervals.validation import validate_node
@@ -104,49 +113,22 @@ class NestedIntervalsModelMixin(models.Model):
         return self.get_ancestors() | self.get_descendants() | self.__class__.objects.filter(pk=self.pk)
 
     def set_matrix(self, matrix):
-        for field_name, num in zip(self._nested_intervals_field_names, matrix):
-            setattr(self, field_name, abs(num))
+        set_matrix(self, matrix)
 
     def set_parent(self, parent):
-        parent_name = self._nested_intervals_field_names[-1]
-        setattr(self, parent_name, parent)
+        set_parent(self, parent)
 
     def set_as_child_of(self, parent):
-        if parent:
-            parent_matrix = parent.get_matrix()
-        else:
-            parent_matrix = INVISIBLE_ROOT_MATRIX
-        child_matrix = get_child_matrix(
-            parent_matrix,
-            last_child_nth_of(type(self).objects, parent_matrix) + 1)
-
-        try:
-            validate_node(self)
-        except InvalidNodeError:
-            # A new model instance is being created,
-            # so a setting the matrix is enough.
-            self.set_matrix(child_matrix)
-            self.set_parent(parent)
-            return (self,)
-
-        # self is an existing model instance which may have
-        # descendants, so the instance and its descendants'
-        # matrices must be updated, using the reroot function.
-        return reroot(self, parent, child_matrix)
+        return set_as_child_of(self, parent)
 
     def set_as_root(self):
-        return self.set_as_child_of(None)
+        return set_as_root(self)
 
     def save_as_child_of(self, parent, *args, **kwargs):
-        nodes = self.set_as_child_of(parent)
-        for node in nodes:
-            node.save(*args, **kwargs)
-        return nodes
+        return save_as_child_of(self, parent, *args, **kwargs)
 
     def save_as_root(self, *args, **kwargs):
-        self.set_as_root()
-        self.save(*args, **kwargs)
-        return self
+        return save_as_root(self, *args, **kwargs);
 
 def validate_multi_column_values(d_list, allowed_columns):
     for d in d_list:

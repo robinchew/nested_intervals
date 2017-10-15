@@ -1,7 +1,9 @@
 from django.db import models
 from django.db.models import F
 
+from nested_intervals.exceptions import InvalidNodeError
 from nested_intervals.matrix import get_child_matrix
+from nested_intervals.matrix import INVISIBLE_ROOT_MATRIX
 from nested_intervals.matrix import Matrix
 from nested_intervals.exceptions import NoChildrenError
 from nested_intervals.validation import validate_node
@@ -22,6 +24,51 @@ def get_matrix(instance):
 def get_nth(instance):
     n11, n12, n21, n22, parent_name = instance._nested_intervals_field_names
     return int(getattr(instance, n11) / getattr(instance, n12))
+
+def set_matrix(instance, matrix):
+    for field_name, num in zip(instance._nested_intervals_field_names, matrix):
+        setattr(instance, field_name, abs(num))
+
+def set_parent(instance, parent):
+    parent_name = instance._nested_intervals_field_names[-1]
+    setattr(instance, parent_name, parent)
+
+def set_as_child_of(instance, parent):
+    if parent:
+        parent_matrix = parent.get_matrix()
+    else:
+        parent_matrix = INVISIBLE_ROOT_MATRIX
+    child_matrix = get_child_matrix(
+        parent_matrix,
+        last_child_nth_of(type(instance).objects, parent_matrix) + 1)
+
+    try:
+        validate_node(instance)
+    except InvalidNodeError:
+        # A new model instance is being created,
+        # so a setting the matrix is enough.
+        set_matrix(instance, child_matrix)
+        set_parent(instance, parent)
+        return (instance,)
+
+    # instance is an existing model instance which may have
+    # descendants, so the instance and its descendants'
+    # matrices must be updated, using the reroot function.
+    return reroot(instance, parent, child_matrix)
+
+def save_as_child_of(instance, parent, *args, **kwargs):
+    nodes = set_as_child_of(instance, parent)
+    for node in nodes:
+        node.save(*args, **kwargs)
+    return nodes
+
+def set_as_root(instance):
+    return set_as_child_of(instance, None)
+
+def save_as_root(instance, *args, **kwargs):
+    instance.set_as_root()
+    instance.save(*args, **kwargs)
+    return instance
 
 ######################
 # QUERYSET FUNCTIONS #
@@ -91,8 +138,7 @@ def reroot(node, parent, child_matrix):
             reroot(
                 child,
                 node,
-                get_child_matrix(child_matrix, i+1)
-            )
+                get_child_matrix(child_matrix, i+1))
             for i, child in enumerate(children)
         ),
         (),
